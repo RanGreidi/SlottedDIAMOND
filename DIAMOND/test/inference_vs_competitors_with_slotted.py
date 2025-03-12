@@ -89,6 +89,8 @@ class TestvsCompetitors:
             
             # generate first decisions
 
+            # Run Slotted DIAMOND
+            #_, _, _, _ , self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(Gloval_env, grrl_data=True)  
             # Run DIAMOND 
             _, _, _, _ , self.first_step_actions['DIAMOND'] = self.diamond(Gloval_env, grrl_data=True)        
             # Run GRRL
@@ -144,6 +146,13 @@ class TestvsCompetitors:
                     SlotedDIAMOND_delay_data = Algos_step_envs['SlotedDIAMOND'].get_delay_data()
                     SlotedDIAMOND_rates_data = Algos_step_envs['SlotedDIAMOND'].get_rates_data()
                     slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['SlotedDIAMOND'].flows]
+                    slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
+                    slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
+
+                # Run SlottedDIAMOND
+                if Algos_step_envs['DIAMOND'].flows:
+                    SlotedDIAMOND_rates_data, SlotedDIAMOND_delay_data = run_Slotted_predefined_actions(Algos_step_envs['SlotedDIAMOND'], self.first_step_actions['SlotedDIAMOND'])
+                    slot_data['DIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['SlotedDIAMOND'].flows]
                     slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
                     slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
 

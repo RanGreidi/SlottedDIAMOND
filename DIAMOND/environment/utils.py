@@ -336,10 +336,11 @@ def get_flow_by_name(dicts_list, name):
     return None
 
 def run_predefined_actions(env, actions):
-        
-        # the actions in actions list needs to be in the order of all active flows, 
-        # for example: if env.flows has 3 flows with the names 2, 3, 4, we need to take index 2 3 and 4 from the inital actions (initail actions is orders according to inital global flows, thus all flows must be active
-        # at first run).
+        '''      
+        the actions in actions list needs to be in the order of all active flows, 
+        for example: if env.flows has 3 flows with the names 2, 3, 4, we need to take index 2 3 and 4 from the inital actions (initail actions is orders according to inital global flows, thus all flows must be active
+        at first run).
+        '''
         if type(actions[0]) != tuple:
             current_slot_actions = []
             for active_flow in env.flows:
@@ -362,3 +363,11 @@ def run_predefined_actions(env, actions):
         delay_data = env.get_delay_data(action_as_idx=action_as_idx)
         return rate_date, delay_data
         
+def run_Slotted_predefined_actions(env, actions):
+    '''  
+    This function is identical to run_predefined_actions, but it allocates a new flow with other method (OSPF), when the given actions does not match the
+    incoming flows to run - suitable for the slottted algorithms
+    '''
+
+
+    return
