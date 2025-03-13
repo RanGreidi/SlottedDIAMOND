@@ -79,20 +79,20 @@ class TestvsCompetitors:
             seed = SEED + (episode + 1) + self.episode_from + 1
 
             # generate env
-            Gloval_env, env_configurations = generate_env(num_nodes=self.num_nodes,
-                            num_edges=self.num_edges,
-                            num_actions=self.num_actions,
-                            num_flows=self.num_flows,
-                            min_flow_demand=kwargs.get('min_flow_demand', 1e2),
-                            max_flow_demand=kwargs.get('max_flow_demand', 1e2),
-                            min_capacity=kwargs.get('min_capacity', 10),
-                            max_capacity=kwargs.get('max_capacity', 10),
-                            seed=seed,
-                            graph_mode=kwargs.get('graph_mode', 'random'),
-                            trx_power_mode=kwargs.get('trx_power_mode', 'equal'),
-                            rayleigh_scale=kwargs.get('rayleigh_scale'),
-                            max_trx_power=kwargs.get('max_trx_power'),
-                            channel_gain=kwargs.get('channel_gain'))
+            Gloval_env, env_configurations, flows_statistics = generate_env(num_nodes=self.num_nodes,
+                                                                            num_edges=self.num_edges,
+                                                                            num_actions=self.num_actions,
+                                                                            num_flows=self.num_flows,
+                                                                            min_flow_demand=kwargs.get('min_flow_demand', 1e2),
+                                                                            max_flow_demand=kwargs.get('max_flow_demand', 1e2),
+                                                                            min_capacity=kwargs.get('min_capacity', 10),
+                                                                            max_capacity=kwargs.get('max_capacity', 10),
+                                                                            seed=seed,
+                                                                            graph_mode=kwargs.get('graph_mode', 'random'),
+                                                                            trx_power_mode=kwargs.get('trx_power_mode', 'equal'),
+                                                                            rayleigh_scale=kwargs.get('rayleigh_scale'),
+                                                                            max_trx_power=kwargs.get('max_trx_power'),
+                                                                            channel_gain=kwargs.get('channel_gain'))
             
             # generate first decisions
 
@@ -177,7 +177,7 @@ class TestvsCompetitors:
                         slot_data[f"{name}_rates"] = rates_data['rate_per_flow']                    
 
                 # Update Algos_Global_flows according to preformance of each algo
-                Algos_Global_flows = self.update_Global_flows(Algos_Global_flows, slot_data)
+                Algos_Global_flows = self.update_Global_flows(Algos_Global_flows, flows_statistics, slot_data)
 
                 # gather data from all slots to be avarge over all episode
                 full_run_data.append(slot_data)
@@ -217,7 +217,7 @@ class TestvsCompetitors:
             new_Algos_slot_flows[algo] = self.generate_flows_with_fixed_pkt(flows,pkt_size)  # Replace self.modify_flow(flow) with your desired operation
         return new_Algos_slot_flows
 
-    def update_Global_flows(self, Algos_Global_flows, data):
+    def update_Global_flows(self, Algos_Global_flows, flows_statistics, slot_data):
         '''
         input:  1. flows list for each algo according to its current state
                 2. rate and delay data for each algo
@@ -227,19 +227,28 @@ class TestvsCompetitors:
         according to the performance of each algo in the previous slot
 
         in the future, flows that needs to be added in a slot will be added here.
+        
+        Units: 
+        slot_duration [sec]
+        rate [Mbps]
+        initial_delay [micro sec]
+        BW [MHz]
+        delivered_packets [Megabit]
         '''
-        # Units: 
-        # slot_duration [sec]
-        # rate [Mbps]
-        # initial_delay [micro sec]
-        # BW [MHz]
-        # delivered_packets [Megabit]
-
-
+        
+        # adding flow pkts according to arrivle statistics
+        for flow_statistics in flows_statistics:
+            entered_new_pkts = flow_statistics.step()
+            flow_name = flow_statistics.flow_name
+            for algo in self.algos:
+                flow = get_flow_by_name(Algos_Global_flows[algo],flow_name) 
+                flow['packets'] += entered_new_pkts
+        
+        # removing flow pkts according to arrvied pkts
         for algo in self.algos:
-            algo_active_flows = data[f"{algo}_active_flows"]
-            algo_delay = data[f"{algo}_delay"]
-            algo_rate = data[f"{algo}_rates"]
+            algo_active_flows = slot_data[f"{algo}_active_flows"]
+            algo_delay = slot_data[f"{algo}_delay"]
+            algo_rate = slot_data[f"{algo}_rates"]
             
             # how many packets will be delivered in slot_duration
             units = 1e6
@@ -332,8 +341,8 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # params
-    num_nodes = 15  # 60
-    num_edges = 20  # 90
+    num_nodes = 10  # 60
+    num_edges = 15  # 90
     num_actions = 15
     temperature = 1.2
     num_episodes = 1
@@ -346,7 +355,7 @@ if __name__ == "__main__":
     channel_gain = 1
 
     slot_duration = 1
-    num_slots = 200
+    num_slots = 25
     
     for GRAPH_MODE in ['random', 'geant', 'nsfnet']:
         for trx_power_mode in ['equal', 'rayleigh', 'steps']:

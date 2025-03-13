@@ -1,5 +1,6 @@
 from environment import GraphEnvPower as GraphEnv
 from environment.utils import *
+from environment.Traffic_Probability_Model import Traffic_Probability_Model
 
 
 def _get_random_flows(num_nodes, num_flows, demands=[100], seed=1):
@@ -12,16 +13,26 @@ def _get_random_flows(num_nodes, num_flows, demands=[100], seed=1):
     :return: list of flows as (src, dst, pkt)
     """
     flow_demand = [(1000/(pow(i,3))) for i in range(1,num_flows+1)] #[2, 20, 50 ,100, 200, 9, 7, 500 ,200, 1000][::-1] 
+    initial_state = 1000
     random.seed(seed)
-    result = []
+    
+    flows = []
+    flows_statistics = []
     for name in range(num_flows):
         src, dst = random.sample(range(num_nodes), 2)
         f = {"source": src,
              "destination": dst,
-             "packets": flow_demand[name],#random.choice(demands),
+             "packets": initial_state, #flow_demand[name] #random.choice(demands),
              "name": name} # to be changes in the future to markov.state 
-        result.append(f)
-    return result
+        
+        flow_statistics = Traffic_Probability_Model(source=src,
+                                                    destination=dst,
+                                                    initial_state=initial_state,
+                                                    flow_name=name,
+                                                    seed=seed )
+        flows.append(f)
+        flows_statistics.append(flow_statistics)
+    return flows, flows_statistics
 
 
 def generate_env(num_nodes=10,
@@ -84,7 +95,7 @@ def generate_env(num_nodes=10,
     delta = 10
     packets = list(range(int(min_flow_demand), int(max_flow_demand) + delta, delta))
 
-    flows = _get_random_flows(num_nodes=num_nodes, num_flows=num_flows, demands=packets, seed=seed)
+    flows, flows_statistics = _get_random_flows(num_nodes=num_nodes, num_flows=num_flows, demands=packets, seed=seed)
 
     # 3. generate env instance
     # capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=(num_nodes, num_nodes))
@@ -116,4 +127,4 @@ def generate_env(num_nodes=10,
                                 seed=seed,
                                 **kwargs)
 
-    return env, env_configurations
+    return env, env_configurations, flows_statistics

@@ -146,7 +146,7 @@ class SLOTTED_DIAMOND:
         This function takes in the current state of the flows for each algo and the rate and delay data for each algo, and updates the flows packets for each algo
         according to the performance of each algo in the previous slot
 
-        in the future, flows that needs to be added in a slot will be added here.
+        in the future,  : flows that need to be added in a slot will be added here !!------according to the prediction----!!.
         '''
         # Units: 
         # slot_duration [sec]
