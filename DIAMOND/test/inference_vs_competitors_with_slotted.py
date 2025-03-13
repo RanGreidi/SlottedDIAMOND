@@ -30,17 +30,24 @@ class TestvsCompetitors:
                  **kwargs):
 
         self.num_episodes = num_episodes
+        
         self.episode_from = kwargs.get('episode_from', 0)
         self.slot_duration = kwargs.get('slot_duration', 1)
         self.num_slots = kwargs.get('num_slots', 100)
+        self.pkt_size = kwargs.get('pkt_size', 100)
+
         self.algos = ['SlotedDIAMOND', 'DIAMOND','GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
         self.num_of_algos = len(self.algos)
         self.first_step_actions = {algo:[] for algo in self.algos}
-
+        
 
         # Algos defenitions
-        self.slotted_diamond = SLOTTED_DIAMOND(grrl_model_path=grrl_model_path, nb3r_tmpr=kwargs.get('nb3r_tmpr', 1),
-                               nb3r_steps=0)
+        self.slotted_diamond = SLOTTED_DIAMOND( grrl_model_path=grrl_model_path, 
+                                                nb3r_tmpr=kwargs.get('nb3r_tmpr', 1),
+                                                nb3r_steps=0,
+                                                slot_duration=self.slot_duration,
+                                                num_slots=self.num_slots, 
+                                                pkt_size=self.pkt_size)
 
         self.diamond = DIAMOND(grrl_model_path=grrl_model_path, nb3r_tmpr=kwargs.get('nb3r_tmpr', 1),
                                nb3r_steps=kwargs.get('nb3r_steps', 10))
@@ -90,14 +97,14 @@ class TestvsCompetitors:
             # generate first decisions
 
             # Run Slotted DIAMOND
-            #_, _, _, _ , self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(Gloval_env, grrl_data=True)  
+            _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env), env_configurations, grrl_data=True)  
             # Run DIAMOND 
-            _, _, _, _ , self.first_step_actions['DIAMOND'] = self.diamond(Gloval_env, grrl_data=True)        
+            _, _, _, _ , self.first_step_actions['DIAMOND'] = self.diamond(copy.deepcopy(Gloval_env), grrl_data=True)        
             # Run GRRL
-            _, _, _, self.first_step_actions['GRRL'] , _ = self.grrl(Gloval_env, grrl_data=True)
+            _, _, _, self.first_step_actions['GRRL'] , _ = self.grrl(copy.deepcopy(Gloval_env), grrl_data=True)
             # Run competitors
             for name, comp in zip(self.competitors.keys(), self.competitors.values()):
-                _, _, _, _, self.first_step_actions[name] = comp.run(Gloval_env, seed)
+                _, _, _, _, self.first_step_actions[name] = comp.run(copy.deepcopy(Gloval_env), seed)
 
             
             # initialize Global flows list for each algo (entire run flows)
@@ -117,7 +124,7 @@ class TestvsCompetitors:
 
             for slot in range(self.num_slots):  
 
-                # initalze data for first slot
+                # initalze data for slot
                 slot_data = self.create_initial_slot_data()
 
                 # create flows for slot for each algo
@@ -140,19 +147,10 @@ class TestvsCompetitors:
 
                 # -----Run ALGOS------
 
-                # Run SLotted DIAMOND
-                if Algos_step_envs['SlotedDIAMOND'].flows:
-                    slotted_diamond_paths, grrl_rates_data, grrl_delay_data = self.slotted_diamond(Algos_step_envs['SlotedDIAMOND'], grrl_data=True)
-                    SlotedDIAMOND_delay_data = Algos_step_envs['SlotedDIAMOND'].get_delay_data()
-                    SlotedDIAMOND_rates_data = Algos_step_envs['SlotedDIAMOND'].get_rates_data()
-                    slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['SlotedDIAMOND'].flows]
-                    slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
-                    slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
-
                 # Run SlottedDIAMOND
-                if Algos_step_envs['DIAMOND'].flows:
-                    SlotedDIAMOND_rates_data, SlotedDIAMOND_delay_data = run_Slotted_predefined_actions(Algos_step_envs['SlotedDIAMOND'], self.first_step_actions['SlotedDIAMOND'])
-                    slot_data['DIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['SlotedDIAMOND'].flows]
+                if Algos_step_envs['SlotedDIAMOND'].flows:
+                    SlotedDIAMOND_rates_data, SlotedDIAMOND_delay_data = run_Slotted_predefined_actions(Algos_step_envs['SlotedDIAMOND'], self.first_step_actions['SlotedDIAMOND'], slot)
+                    slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['SlotedDIAMOND'].flows]
                     slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
                     slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
 
@@ -213,11 +211,11 @@ class TestvsCompetitors:
         if the algo has one less flow to allocate, the slot_flows needs to be updated accordingly
         it counts how many flows left for each algo and creates flows for each algo for a single slot with a fixes packet size (demand)
         '''
-        new_Algos_Global_flows = {}
-        pkt_size = 100
+        new_Algos_slot_flows = {}
+        pkt_size = self.pkt_size
         for algo, flows in Algos_Global_flows.items():
-            new_Algos_Global_flows[algo] = self.generate_flows_with_fixed_pkt(flows,pkt_size)  # Replace self.modify_flow(flow) with your desired operation
-        return new_Algos_Global_flows
+            new_Algos_slot_flows[algo] = self.generate_flows_with_fixed_pkt(flows,pkt_size)  # Replace self.modify_flow(flow) with your desired operation
+        return new_Algos_slot_flows
 
     def update_Global_flows(self, Algos_Global_flows, data):
         '''

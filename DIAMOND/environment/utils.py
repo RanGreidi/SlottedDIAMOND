@@ -363,11 +363,31 @@ def run_predefined_actions(env, actions):
         delay_data = env.get_delay_data(action_as_idx=action_as_idx)
         return rate_date, delay_data
         
-def run_Slotted_predefined_actions(env, actions):
+def run_Slotted_predefined_actions(env, actions, slot):
     '''  
     This function is identical to run_predefined_actions, but it allocates a new flow with other method (OSPF), when the given actions does not match the
     incoming flows to run - suitable for the slottted algorithms
     '''
+    current_action_from_slotted_algo = actions[slot] # Actions is in the form of: {flow_name_1:flow_action_1 , flow_name_2:flow_action_2 ... }
+
+    # TODO: here need to generated a list of actions for the flows who are alive in the real run, need to decide what to do if actions from the slotted
+    # algo refer to diferent flow then the flows who are really exist - for example: do OSPF or allocate a random path
+    # code
+    # code
+    current_slot_actions = []
+    for active_flow in env.flows:
+        current_slot_actions.append(current_action_from_slotted_algo[active_flow['name']])
+    # code
+    # code
+    # Note! actions - this list needs to be ordered as env.flows is ordered! for example: if env.flows is [flow_name_2, flow_name_3, flow_name_4] than actions needs to be 
+    # ordered as [decision_for_flow_name_2, decision_for_flow_name_3, decision_for_flow_name_4]
 
 
-    return
+    action_as_idx=True
+    eval_paths=False
+
+    env.reset()
+    env.eval_all(current_slot_actions, eval_paths)
+    rate_date = env.get_rates_data()
+    delay_data = env.get_delay_data(action_as_idx=action_as_idx)
+    return rate_date, delay_data
