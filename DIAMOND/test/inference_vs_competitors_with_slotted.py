@@ -355,7 +355,7 @@ if __name__ == "__main__":
     channel_gain = 1
 
     slot_duration = 1
-    num_slots = 25
+    num_slots = 100
     
     for GRAPH_MODE in ['random', 'geant', 'nsfnet']:
         for trx_power_mode in ['equal', 'rayleigh', 'steps']:

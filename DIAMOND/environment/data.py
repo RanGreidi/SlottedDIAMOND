@@ -13,7 +13,7 @@ def _get_random_flows(num_nodes, num_flows, demands=[100], seed=1):
     :return: list of flows as (src, dst, pkt)
     """
     flow_demand = [(1000/(pow(i,3))) for i in range(1,num_flows+1)] #[2, 20, 50 ,100, 200, 9, 7, 500 ,200, 1000][::-1] 
-    initial_state = 1000
+    initial_state = 50
     random.seed(seed)
     
     flows = []
