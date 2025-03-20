@@ -237,9 +237,9 @@ class TestvsCompetitors:
         '''
         
         # adding flow pkts according to arrivle statistics
-        for flow_statistics in flows_statistics:
-            entered_new_pkts = flow_statistics.step()
-            flow_name = flow_statistics.flow_name
+        for flow_statistic in flows_statistics:
+            entered_new_pkts = flow_statistic.step()
+            flow_name = flow_statistic.flow_name
             for algo in self.algos:
                 flow = get_flow_by_name(Algos_Global_flows[algo],flow_name) 
                 flow['packets'] += entered_new_pkts
@@ -357,6 +357,8 @@ if __name__ == "__main__":
     slot_duration = 1
     num_slots = 100
     
+    # TODO: flows_initial_sate = 50
+    # TODO: flows_markov_porbability_properties = 
     for GRAPH_MODE in ['random', 'geant', 'nsfnet']:
         for trx_power_mode in ['equal', 'rayleigh', 'steps']:
 

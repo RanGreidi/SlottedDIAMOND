@@ -13,14 +13,14 @@ class Traffic_Probability_Model:
                             'mice_start_from' : 10,
                             'elephent_start_from' : 1000,
 
-                            'p_mice' : 0.05,
-                            'p_elephent' : 0.05,
+                            'p_mice' : 0.1,
+                            'p_elephent' : 0.00,
                             'p_idle' : 0.9,
 
-                            'p_finish' : 0.1,
+                            'p_finish' : 0.5,
                             'p_same' : 0.5,
-                            'p_minus' : 0.2,
-                            'p_plus' : 0.2,
+                            'p_minus' : 0.0,
+                            'p_plus' : 0.0,
                             'Num_of_states': 101},
                 seed = 123):
         
@@ -85,18 +85,18 @@ class Traffic_Probability_Model:
         return state_history
     
     def create_transition_matrix(self,
-                                mice_start_from = 10,
-                                elephent_start_from = 1000,
-                                p_mice = 0.05,
-                                p_elephent = 0.05,
-                                p_idle = 0.9,
+                                mice_start_from,
+                                elephent_start_from,
+                                p_mice,
+                                p_elephent,
+                                p_idle,
 
-                                p_finish = 0.1,
-                                p_same = 0.5,
-                                p_minus = 0.2,
-                                p_plus = 0.2,
+                                p_finish,
+                                p_same,
+                                p_minus,
+                                p_plus,
                                 
-                                Num_of_states = 11
+                                Num_of_states
                                 ):
 
 
