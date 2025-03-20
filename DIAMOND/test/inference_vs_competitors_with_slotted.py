@@ -83,6 +83,8 @@ class TestvsCompetitors:
                                                                             num_edges=self.num_edges,
                                                                             num_actions=self.num_actions,
                                                                             num_flows=self.num_flows,
+                                                                            slot_duration = self.slot_duration,
+                                                                            num_slots = self.num_slots,                                                                            
                                                                             min_flow_demand=kwargs.get('min_flow_demand', 1e2),
                                                                             max_flow_demand=kwargs.get('max_flow_demand', 1e2),
                                                                             min_capacity=kwargs.get('min_capacity', 10),
@@ -357,8 +359,6 @@ if __name__ == "__main__":
     slot_duration = 1
     num_slots = 100
     
-    # TODO: flows_initial_sate = 50
-    # TODO: flows_markov_porbability_properties = 
     for GRAPH_MODE in ['random', 'geant', 'nsfnet']:
         for trx_power_mode in ['equal', 'rayleigh', 'steps']:
 

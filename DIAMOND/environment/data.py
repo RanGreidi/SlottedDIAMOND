@@ -1,9 +1,10 @@
 from environment import GraphEnvPower as GraphEnv
 from environment.utils import *
 from environment.Traffic_Probability_Model import Traffic_Probability_Model
+from environment.Traffic_Probability_HawkesModel import HawkesModel
 
 
-def _get_random_flows(num_nodes, num_flows, demands=[100], seed=1):
+def _get_random_flows(num_nodes, num_flows, slot_duration, num_slots, seed=1):
     """
     generates random flows
     :param num_nodes: number of nodes in the communication graph
@@ -12,26 +13,35 @@ def _get_random_flows(num_nodes, num_flows, demands=[100], seed=1):
     :param seed: random seed
     :return: list of flows as (src, dst, pkt)
     """
-    flow_demand = [(1000/(pow(i,3))) for i in range(1,num_flows+1)] #[2, 20, 50 ,100, 200, 9, 7, 500 ,200, 1000][::-1] 
-    initial_state = 50
     random.seed(seed)
     
     flows = []
     flows_statistics = []
     for name in range(num_flows):
         src, dst = random.sample(range(num_nodes), 2)
+
+        flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
+                                        lambda0 = 0.1, 
+                                        alpha = 0,
+                                        beta = 0.7,                                        
+                                        
+                                        source=src,
+                                        destination=dst,
+                                        flow_name=name,
+                                        num_slots=num_slots,
+                                        slot_duration=slot_duration,
+                                        history_num_slots=1000,
+
+                                        seed=seed )
+        
         f = {"source": src,
              "destination": dst,
-             "packets": initial_state, #flow_demand[name] #random.choice(demands),
-             "name": name} # to be changes in the future to markov.state 
+             "packets": flow_statistics.initial_count, #flow_demand[name] #random.choice(demands),
+             "name": name} # to be changes in the future to markov.state         
         
-        flow_statistics = Traffic_Probability_Model(source=src,
-                                                    destination=dst,
-                                                    initial_state=initial_state,
-                                                    flow_name=name,
-                                                    seed=seed )
         flows.append(f)
         flows_statistics.append(flow_statistics)
+    
     return flows, flows_statistics
 
 
@@ -51,6 +61,8 @@ def generate_env(num_nodes=10,
                  reward_balance=0.8,
                  seed=37,
                  graph_mode='random',
+                 slot_duration=None,
+                 num_slots=None,
                  **kwargs):
     # assert graph_mode.lower() in ['random', 'nsfnet', 'geant']
     assert graph_mode.lower() in ['random', 'nsfnet', 'geant', 'grid', 'irregular_grid_8x8', 'irregular_grid_6x6']
@@ -92,10 +104,7 @@ def generate_env(num_nodes=10,
         num_nodes = 36
 
     # 2. create random flows
-    delta = 10
-    packets = list(range(int(min_flow_demand), int(max_flow_demand) + delta, delta))
-
-    flows, flows_statistics = _get_random_flows(num_nodes=num_nodes, num_flows=num_flows, demands=packets, seed=seed)
+    flows, flows_statistics = _get_random_flows(num_nodes=num_nodes, num_flows=num_flows, slot_duration=slot_duration, num_slots=num_slots, seed=seed)
 
     # 3. generate env instance
     # capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=(num_nodes, num_nodes))
