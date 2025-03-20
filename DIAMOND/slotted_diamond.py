@@ -13,7 +13,8 @@ class SLOTTED_DIAMOND:
                  nb3r_tmpr=10,
                  slot_duration=1,
                  num_slots=100,
-                 pkt_size = 100):
+                 pkt_size=100,
+                 predictor_mode='Ideal'):
         
         if grrl_model_path is None:
             grrl_model_path = os.path.join(".", "pretrained", "model_20221113_212726_480.pt")
@@ -24,15 +25,16 @@ class SLOTTED_DIAMOND:
         self.slot_duration = slot_duration
         self.num_slots = num_slots
         self.pkt_size = pkt_size
+        self.predictor_mode = predictor_mode
 
-    def __call__(self, Gloval_env, env_configurations, grrl_data=False):
+    def __call__(self, Gloval_env, env_configurations, flows_statistics, grrl_data=False):
 
 
         # initialize Global flows list for each algo (entire run flows)
         Global_flows = Gloval_env.flows
-        
         full_run_data = []
         Actions = []
+        self.flows_statistics = flows_statistics
 
         for slot in range(self.num_slots):  
 
@@ -69,7 +71,7 @@ class SLOTTED_DIAMOND:
                 Actions.append([])
 
             # Update Algos_Global_flows according to preformance of each algo
-            Global_flows = self.update_Global_flows(Global_flows, slot_data)
+            Global_flows = self.update_Global_flows(Global_flows, slot_data, slot)
 
             # gather data from all slots to be avarge over all episode
             full_run_data.append(slot_data)
@@ -137,7 +139,7 @@ class SLOTTED_DIAMOND:
                 new_flows.append(new_flow)
         return new_flows
 
-    def update_Global_flows(self, Global_flows, data):
+    def update_Global_flows(self, Global_flows, data, slot):
         '''
         input:  1. flows list for each algo according to its current state
                 2. rate and delay data for each algo
@@ -147,14 +149,15 @@ class SLOTTED_DIAMOND:
         according to the performance of each algo in the previous slot
 
         in the future,  : flows that need to be added in a slot will be added here !!------according to the prediction----!!.
+        
+        Units: 
+        slot_duration [sec]
+        rate [Mbps]
+        initial_delay [micro sec]
+        BW [MHz]
+        delivered_packets [Megabit]
         '''
-        # Units: 
-        # slot_duration [sec]
-        # rate [Mbps]
-        # initial_delay [micro sec]
-        # BW [MHz]
-        # delivered_packets [Megabit]
-
+        
         algo_active_flows = data["SlotedDIAMOND_active_flows"]
         algo_delay = data["SlotedDIAMOND_delay"]
         algo_rate = data["SlotedDIAMOND_rates"]
@@ -165,7 +168,7 @@ class SLOTTED_DIAMOND:
         #  -[Megabit]-       -[Mbps]-       ------[microsec]-----    --[micro sec]--     -[micro sec]-
         delivered_packets =  algo_rate * ( (self.slot_duration*units - initial_delay) )     /units          # rate [Mbps] * (slot_duration [micro sec])/microsec
 
-        # reduce deliver packets from the flows
+        # removing flow pkts according to arrvied pkts
         if algo_active_flows:
             for idx_in_metrics_for_flow,flow_name in enumerate(algo_active_flows):
                 flow = get_flow_by_name(Global_flows,flow_name) # flow is a pointer to the current flow in the Algos_Global_flows
@@ -174,6 +177,19 @@ class SLOTTED_DIAMOND:
                 else:
                     flow['packets'] -= delivered_packets[idx_in_metrics_for_flow]
         
+        # adding flow pkts according to arrivle PREDICTION
+        if self.predictor_mode == 'Ideal':
+            for flow_statistic in self.flows_statistics:
+                entered_new_pkts = flow_statistic.future_events[slot]
+                flow_name = flow_statistic.flow_name
+                flow = get_flow_by_name(Global_flows,flow_name) 
+                flow['packets'] += entered_new_pkts
+
+        if self.predictor_mode == 'predictor_on':
+            pass
+        if self.predictor_mode == 'predictor_off':
+            pass
+
         return  Global_flows 
     
     def create_initial_slot_data(self):

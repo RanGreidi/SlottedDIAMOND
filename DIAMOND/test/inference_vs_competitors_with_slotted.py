@@ -35,6 +35,7 @@ class TestvsCompetitors:
         self.slot_duration = kwargs.get('slot_duration', 1)
         self.num_slots = kwargs.get('num_slots', 100)
         self.pkt_size = kwargs.get('pkt_size', 100)
+        self.predictor_mode = kwargs.get('predictor_mode', 'Ideal')
 
         self.algos = ['SlotedDIAMOND', 'DIAMOND','GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
         self.num_of_algos = len(self.algos)
@@ -47,7 +48,8 @@ class TestvsCompetitors:
                                                 nb3r_steps=0,
                                                 slot_duration=self.slot_duration,
                                                 num_slots=self.num_slots, 
-                                                pkt_size=self.pkt_size)
+                                                pkt_size=self.pkt_size,
+                                                predictor_mode=self.predictor_mode)
 
         self.diamond = DIAMOND(grrl_model_path=grrl_model_path, nb3r_tmpr=kwargs.get('nb3r_tmpr', 1),
                                nb3r_steps=kwargs.get('nb3r_steps', 10))
@@ -99,7 +101,7 @@ class TestvsCompetitors:
             # generate first decisions
 
             # Run Slotted DIAMOND
-            _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env), env_configurations, grrl_data=True)  
+            _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env), env_configurations, flows_statistics, grrl_data=True)  
             # Run DIAMOND 
             _, _, _, _ , self.first_step_actions['DIAMOND'] = self.diamond(copy.deepcopy(Gloval_env), grrl_data=True)        
             # Run GRRL
@@ -358,6 +360,8 @@ if __name__ == "__main__":
 
     slot_duration = 1
     num_slots = 100
+
+    predictor_mode = 'Ideal' # 'predictor_on' # 'predictor_off'
     
     for GRAPH_MODE in ['random', 'geant', 'nsfnet']:
         for trx_power_mode in ['equal', 'rayleigh', 'steps']:
@@ -372,7 +376,7 @@ if __name__ == "__main__":
             for num_flows in [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200] if GRAPH_MODE == 'random' else \
                              [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
                 alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, episode_from=episode_from,
-                                        temperature=temperature, nb3r_steps=nb3r_steps, num_slots=num_slots, slot_duration=slot_duration)
+                                        temperature=temperature, nb3r_steps=nb3r_steps, num_slots=num_slots, slot_duration=slot_duration, predictor_mode=predictor_mode)
 
                 data, labels = alg(num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows, num_actions=num_actions,
                                    graph_mode=GRAPH_MODE,
