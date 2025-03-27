@@ -189,9 +189,11 @@ def calc_transmission_rate(link_mac):
     if len(link_mac) == 1:
         return link_mac[0]
     trans = np.stack([link_mac[i] - link_mac[i+1] for i in range(len(link_mac)-1)], axis=0)
-    # if len(trans.shape) == 1:
-    #     return trans
-    return np.min(trans, axis=0)
+    # masked_trans = np.where(trans > 0, trans, np.inf)
+    # inf_counts = np.sum(np.isinf(masked_trans), axis=0)
+    # if np.any(inf_counts > 2):  # Check if any element is np.inf
+    #     raise ValueError("Array contains at least two np.inf value!")        
+    return trans[0] #np.min(trans, axis=0)
 
 
 def generate_random_graph(n, e, seed=None):

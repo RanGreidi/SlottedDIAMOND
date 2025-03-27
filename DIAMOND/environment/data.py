@@ -4,7 +4,7 @@ from environment.Traffic_Probability_Model import Traffic_Probability_Model
 from environment.Traffic_Probability_HawkesModel import HawkesModel
 
 
-def _get_random_flows(num_nodes, num_flows, slot_duration, num_slots, seed=1):
+def _get_random_flows(num_nodes, num_flows, demands, slot_duration, num_slots, seed=1):
     """
     generates random flows
     :param num_nodes: number of nodes in the communication graph
@@ -14,14 +14,16 @@ def _get_random_flows(num_nodes, num_flows, slot_duration, num_slots, seed=1):
     :return: list of flows as (src, dst, pkt)
     """
     random.seed(seed)
-    
+    # flow_demand = [(1000/(pow(i,1))) for i in range(1,num_flows+1)]
+    flow_demand = demands
+
     flows = []
     flows_statistics = []
     for name in range(num_flows):
         src, dst = random.sample(range(num_nodes), 2)
 
         flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
-                                        lambda0 = 0.1, 
+                                        lambda0 = 0.00000001, 
                                         alpha = 0,
                                         beta = 0.7,                                        
                                         
@@ -30,13 +32,13 @@ def _get_random_flows(num_nodes, num_flows, slot_duration, num_slots, seed=1):
                                         flow_name=name,
                                         num_slots=num_slots,
                                         slot_duration=slot_duration,
-                                        history_num_slots=1000,
+                                        history_num_slots=100,
 
                                         seed=seed )
         
         f = {"source": src,
              "destination": dst,
-             "packets": flow_statistics.initial_count, #flow_demand[name] #random.choice(demands),
+             "packets": flow_demand[name], #flow_statistics.initial_count,
              "name": name} # to be changes in the future to markov.state         
         
         flows.append(f)
@@ -104,7 +106,10 @@ def generate_env(num_nodes=10,
         num_nodes = 36
 
     # 2. create random flows
-    flows, flows_statistics = _get_random_flows(num_nodes=num_nodes, num_flows=num_flows, slot_duration=slot_duration, num_slots=num_slots, seed=seed)
+    delta = 2
+    packets = list(range(int(min_flow_demand), int(max_flow_demand) + delta, delta))
+    demands = [random.choice(packets) for _ in range(num_flows)]
+    flows, flows_statistics = _get_random_flows(num_nodes=num_nodes, num_flows=num_flows, demands=demands, slot_duration=slot_duration, num_slots=num_slots, seed=seed)
 
     # 3. generate env instance
     # capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=(num_nodes, num_nodes))

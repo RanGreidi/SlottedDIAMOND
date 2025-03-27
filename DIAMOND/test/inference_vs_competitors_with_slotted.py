@@ -35,6 +35,7 @@ class TestvsCompetitors:
         self.slot_duration = kwargs.get('slot_duration', 1)
         self.num_slots = kwargs.get('num_slots', 100)
         self.pkt_size = kwargs.get('pkt_size', 100)
+        self.units = kwargs.get('units', 1e6)
         self.predictor_mode = kwargs.get('predictor_mode', 'Ideal')
 
         self.algos = ['SlotedDIAMOND', 'DIAMOND','GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
@@ -87,10 +88,10 @@ class TestvsCompetitors:
                                                                             num_flows=self.num_flows,
                                                                             slot_duration = self.slot_duration,
                                                                             num_slots = self.num_slots,                                                                            
-                                                                            min_flow_demand=kwargs.get('min_flow_demand', 1e2),
-                                                                            max_flow_demand=kwargs.get('max_flow_demand', 1e2),
-                                                                            min_capacity=kwargs.get('min_capacity', 10),
-                                                                            max_capacity=kwargs.get('max_capacity', 10),
+                                                                            min_flow_demand=kwargs.get('min_flow_demand', 500),
+                                                                            max_flow_demand=kwargs.get('max_flow_demand', 3000),
+                                                                            min_capacity=kwargs.get('min_capacity', 200),
+                                                                            max_capacity=kwargs.get('max_capacity', 500),
                                                                             seed=seed,
                                                                             graph_mode=kwargs.get('graph_mode', 'random'),
                                                                             trx_power_mode=kwargs.get('trx_power_mode', 'equal'),
@@ -239,7 +240,7 @@ class TestvsCompetitors:
         BW [MHz]
         delivered_packets [Megabit]
         '''
-        
+
         # adding flow pkts according to arrivle statistics
         for flow_statistic in flows_statistics:
             entered_new_pkts = flow_statistic.step()
@@ -255,7 +256,7 @@ class TestvsCompetitors:
             algo_rate = slot_data[f"{algo}_rates"]
             
             # how many packets will be delivered in slot_duration
-            units = 1e6
+            units = self.units#1e6
             initial_delay = algo_delay
             #  -[Megabit]-       -[Mbps]-       ------[microsec]-----    --[micro sec]--     -[micro sec]-
             delivered_packets =  algo_rate * ( (self.slot_duration*units - initial_delay) )     /units          # rate [Mbps] * (slot_duration [micro sec])/microsec
@@ -350,17 +351,29 @@ if __name__ == "__main__":
     num_actions = 15
     temperature = 1.2
     num_episodes = 1
-    episode_from = 7500
-    nb3r_steps = 100
+    episode_from = 7501
+    nb3r_steps = 1
 
     trx_power_mode = 'equal'
     rayleigh_scale = 1
     max_trx_power = 10
     channel_gain = 1
+    min_capacity = 200
+    max_capacity = 500
+    min_flow_demand = 5
+    max_flow_demand = 200
+
+
+    pkt_size = 500
+    units = 1e6
 
     slot_duration = 1
-    num_slots = 100
+    num_slots = 25
 
+    #TODO: alpha=
+    #TODO: belta=
+    #TODO: lambda=
+        
     predictor_mode = 'Ideal' # 'predictor_on' # 'predictor_off'
     
     for GRAPH_MODE in ['random', 'geant', 'nsfnet']:
@@ -373,14 +386,17 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            for num_flows in [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200] if GRAPH_MODE == 'random' else \
+            for num_flows in [30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200] if GRAPH_MODE == 'random' else \
                              [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
+                
                 alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, episode_from=episode_from,
-                                        temperature=temperature, nb3r_steps=nb3r_steps, num_slots=num_slots, slot_duration=slot_duration, predictor_mode=predictor_mode)
+                                        temperature=temperature, nb3r_steps=nb3r_steps, num_slots=num_slots, slot_duration=slot_duration, predictor_mode=predictor_mode,
+                                        pkt_size=pkt_size, units=units)
 
                 data, labels = alg(num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows, num_actions=num_actions,
                                    graph_mode=GRAPH_MODE,
-                                   trx_power_mode=trx_power_mode, rayleigh_scale=rayleigh_scale, max_trx_power=max_trx_power, channel_gain=channel_gain)
+                                   trx_power_mode=trx_power_mode, rayleigh_scale=rayleigh_scale, max_trx_power=max_trx_power, channel_gain=channel_gain,
+                                   min_capacity=min_capacity, max_capacity=max_capacity, min_flow_demand=min_flow_demand, max_flow_demand=max_flow_demand)
 
                 # data_rates.append([int(num_flows)] + [data[x] for x in list(filter(lambda x: "rates" in x, data.keys()))])
                 # data_delay.append([int(num_flows)] + [data[x] for x in list(filter(lambda x: "delay" in x, data.keys()))])
