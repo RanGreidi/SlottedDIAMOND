@@ -38,6 +38,7 @@ class TestvsCompetitors:
         self.units = kwargs.get('units', 1e6)
         self.predictor_mode = kwargs.get('predictor_mode', 'Ideal')
         self.pkt_arrival_sample_rate =  kwargs.get('pkt_arrival_sample_rate', 1)
+        self.HawkesParams = kwargs.get('HawkesParams',{})
 
         self.algos = ['SlotedDIAMOND', 'DIAMOND','GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
         self.num_of_algos = len(self.algos)
@@ -99,7 +100,8 @@ class TestvsCompetitors:
                                                                             trx_power_mode=kwargs.get('trx_power_mode', 'equal'),
                                                                             rayleigh_scale=kwargs.get('rayleigh_scale'),
                                                                             max_trx_power=kwargs.get('max_trx_power'),
-                                                                            channel_gain=kwargs.get('channel_gain'))
+                                                                            channel_gain=kwargs.get('channel_gain'),
+                                                                            HawkesParams=self.HawkesParams)
             
             # generate first decisions
 
@@ -348,7 +350,7 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     script_path = os.path.abspath(__file__)
 
-    # params
+    # general params
     num_nodes = 10  # 60
     num_edges = 15  # 90
     num_actions = 15
@@ -366,22 +368,30 @@ if __name__ == "__main__":
     min_flow_demand = 5
     max_flow_demand = 200
 
-
     pkt_size = 500
     units = 1e6
 
     slot_duration = 1
-    num_slots = 200
+    num_slots = 150
 
-    pkt_arrival_sample_rate = 10
-    #TODO: alpha=
-    #TODO: belta=
-    #TODO: lambda=
-        
+    pkt_arrival_sample_rate = 5
+    
+    # Hawkes parms
+    HawkesParams = dict(
+    lambda0 = 0.9,
+    alpha = 0.5,
+    beta = 0.7,
+    history_num_slots = 100,
+    allow_Hawkes_arrivals = True,
+    elephent_flows_num = 10,
+    mice_scaler = 0.1,
+    elephent_scaler = 0.1)
+
+    # predictor params    
     predictor_mode = 'Ideal' # 'predictor_on' # 'predictor_off'
     
-    for GRAPH_MODE in ['random', 'geant', 'nsfnet']:
-        for trx_power_mode in ['equal', 'rayleigh', 'steps']:
+    for GRAPH_MODE in ['random']:
+        for trx_power_mode in ['equal']:
 
             print("----------------------------")
             print(trx_power_mode, GRAPH_MODE)
@@ -390,12 +400,12 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            for num_flows in [300, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200] if GRAPH_MODE == 'random' else \
+            for num_flows in [300, 400, 500, 600, 700, 800, 900] if GRAPH_MODE == 'random' else \
                              [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
                 
                 alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, episode_from=episode_from,
                                         temperature=temperature, nb3r_steps=nb3r_steps, num_slots=num_slots, slot_duration=slot_duration, predictor_mode=predictor_mode,
-                                        pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units)
+                                        pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units, HawkesParams=HawkesParams)
 
                 data, labels = alg(num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows, num_actions=num_actions,
                                    graph_mode=GRAPH_MODE,

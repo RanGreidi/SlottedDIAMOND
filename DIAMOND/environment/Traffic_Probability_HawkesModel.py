@@ -17,6 +17,8 @@ class HawkesModel:
                 slot_duration,
                 history_num_slots,
                 type,
+                mice_scaler=1,
+                elephent_scaler=1,
                 seed = 123):
         
         """
@@ -33,6 +35,9 @@ class HawkesModel:
         self.flow_name = flow_name
         self.seed = seed + 10000*self.flow_name
         self.rng = np.random.default_rng(self.seed)  # Use NumPy's random generator for better reproducibility and to isolate from the rest of my project
+
+        self.mice_scaler=mice_scaler
+        self.elephent_scaler=elephent_scaler
 
         # run time params
         self.time_step = 0
@@ -58,9 +63,9 @@ class HawkesModel:
         # type params 
         self.type = type
         if self.type == 'mice': 
-            self.type_scaler = 0.5 
+            self.type_scaler = self.mice_scaler 
         elif self.type == 'elephent':
-            self.type_scaler = 10
+            self.type_scaler = self.elephent_scaler
         else:
             self.type_scaler = 1
         
@@ -114,6 +119,7 @@ class HawkesModel:
     def plot_interpoalted_vs_original(self):
         # interpolated
         history_count, future_count, total_run_count = self.simulate_counts()
+        total_run_count *= self.type_scaler
         plt.figure(figsize=(10, 6))
         plt.step([step for step in range(len(total_run_count))],total_run_count, marker='*', label="Count Process N(t) Interpolated")
         # original
@@ -172,7 +178,7 @@ if __name__ == "__main__":
 
 
     model = HawkesModel(               
-                    lambda0 = 0.01,
+                    lambda0 = 0.9,
                     alpha = 0.5,
                     beta = 0.7,
 
@@ -181,8 +187,11 @@ if __name__ == "__main__":
                     flow_name=0,
                     num_slots=60,
                     slot_duration=1,
-                    history_num_slots=200,
-                    
+                    history_num_slots=100,
+                    type='elephent',
+                    mice_scaler = 0.1,
+                    elephent_scaler = 0.1,
+
                     seed = 123
                     )
 
