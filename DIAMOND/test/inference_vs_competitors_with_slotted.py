@@ -37,6 +37,7 @@ class TestvsCompetitors:
         self.pkt_size = kwargs.get('pkt_size', 100)
         self.units = kwargs.get('units', 1e6)
         self.predictor_mode = kwargs.get('predictor_mode', 'Ideal')
+        self.pkt_arrival_sample_rate =  kwargs.get('pkt_arrival_sample_rate', 1)
 
         self.algos = ['SlotedDIAMOND', 'DIAMOND','GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
         self.num_of_algos = len(self.algos)
@@ -50,7 +51,8 @@ class TestvsCompetitors:
                                                 slot_duration=self.slot_duration,
                                                 num_slots=self.num_slots, 
                                                 pkt_size=self.pkt_size,
-                                                predictor_mode=self.predictor_mode)
+                                                predictor_mode=self.predictor_mode,
+                                                pkt_arrival_sample_rate=self.pkt_arrival_sample_rate)
 
         self.diamond = DIAMOND(grrl_model_path=grrl_model_path, nb3r_tmpr=kwargs.get('nb3r_tmpr', 1),
                                nb3r_steps=kwargs.get('nb3r_steps', 10))
@@ -182,7 +184,7 @@ class TestvsCompetitors:
                         slot_data[f"{name}_rates"] = rates_data['rate_per_flow']                    
 
                 # Update Algos_Global_flows according to preformance of each algo
-                Algos_Global_flows = self.update_Global_flows(Algos_Global_flows, flows_statistics, slot_data)
+                Algos_Global_flows = self.update_Global_flows(Algos_Global_flows, flows_statistics, slot_data, slot)
 
                 # gather data from all slots to be avarge over all episode
                 full_run_data.append(slot_data)
@@ -222,7 +224,7 @@ class TestvsCompetitors:
             new_Algos_slot_flows[algo] = self.generate_flows_with_fixed_pkt(flows,pkt_size)  # Replace self.modify_flow(flow) with your desired operation
         return new_Algos_slot_flows
 
-    def update_Global_flows(self, Algos_Global_flows, flows_statistics, slot_data):
+    def update_Global_flows(self, Algos_Global_flows, flows_statistics, slot_data, slot):
         '''
         input:  1. flows list for each algo according to its current state
                 2. rate and delay data for each algo
@@ -242,12 +244,13 @@ class TestvsCompetitors:
         '''
 
         # adding flow pkts according to arrivle statistics
-        for flow_statistic in flows_statistics:
-            entered_new_pkts = flow_statistic.step()
-            flow_name = flow_statistic.flow_name
-            for algo in self.algos:
-                flow = get_flow_by_name(Algos_Global_flows[algo],flow_name) 
-                flow['packets'] += entered_new_pkts
+        if slot % self.pkt_arrival_sample_rate == 0:
+            for flow_statistic in flows_statistics:
+                entered_new_pkts = flow_statistic.step()
+                flow_name = flow_statistic.flow_name
+                for algo in self.algos:
+                    flow = get_flow_by_name(Algos_Global_flows[algo],flow_name) 
+                    flow['packets'] += entered_new_pkts
         
         # removing flow pkts according to arrvied pkts
         for algo in self.algos:
@@ -368,8 +371,9 @@ if __name__ == "__main__":
     units = 1e6
 
     slot_duration = 1
-    num_slots = 25
+    num_slots = 200
 
+    pkt_arrival_sample_rate = 10
     #TODO: alpha=
     #TODO: belta=
     #TODO: lambda=
@@ -386,12 +390,12 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            for num_flows in [30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200] if GRAPH_MODE == 'random' else \
+            for num_flows in [300, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200] if GRAPH_MODE == 'random' else \
                              [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
                 
                 alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, episode_from=episode_from,
                                         temperature=temperature, nb3r_steps=nb3r_steps, num_slots=num_slots, slot_duration=slot_duration, predictor_mode=predictor_mode,
-                                        pkt_size=pkt_size, units=units)
+                                        pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units)
 
                 data, labels = alg(num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows, num_actions=num_actions,
                                    graph_mode=GRAPH_MODE,

@@ -14,7 +14,8 @@ class SLOTTED_DIAMOND:
                  slot_duration=1,
                  num_slots=100,
                  pkt_size=100,
-                 predictor_mode='Ideal'):
+                 predictor_mode='Ideal',
+                 pkt_arrival_sample_rate=1):
         
         if grrl_model_path is None:
             grrl_model_path = os.path.join(".", "pretrained", "model_20221113_212726_480.pt")
@@ -26,7 +27,8 @@ class SLOTTED_DIAMOND:
         self.num_slots = num_slots
         self.pkt_size = pkt_size
         self.predictor_mode = predictor_mode
-
+        self.pkt_arrival_sample_rate = pkt_arrival_sample_rate
+        
     def __call__(self, Gloval_env, env_configurations, flows_statistics, grrl_data=False):
 
 
@@ -178,17 +180,18 @@ class SLOTTED_DIAMOND:
                     flow['packets'] -= delivered_packets[idx_in_metrics_for_flow]
         
         # adding flow pkts according to arrivle PREDICTION
-        if self.predictor_mode == 'Ideal':
-            for flow_statistic in self.flows_statistics:
-                entered_new_pkts = flow_statistic.future_events[slot]
-                flow_name = flow_statistic.flow_name
-                flow = get_flow_by_name(Global_flows,flow_name) 
-                flow['packets'] += entered_new_pkts
+        if slot % self.pkt_arrival_sample_rate == 0:
+            if self.predictor_mode == 'Ideal':
+                for flow_statistic in self.flows_statistics:
+                    entered_new_pkts = flow_statistic.future_events[slot]
+                    flow_name = flow_statistic.flow_name
+                    flow = get_flow_by_name(Global_flows,flow_name) 
+                    flow['packets'] += entered_new_pkts
 
-        if self.predictor_mode == 'predictor_on':
-            pass
-        if self.predictor_mode == 'predictor_off':
-            pass
+            if self.predictor_mode == 'predictor_on':
+                pass
+            if self.predictor_mode == 'predictor_off':
+                pass
 
         return  Global_flows 
     

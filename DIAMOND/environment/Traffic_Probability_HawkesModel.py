@@ -16,6 +16,7 @@ class HawkesModel:
                 num_slots,
                 slot_duration,
                 history_num_slots,
+                type,
                 seed = 123):
         
         """
@@ -38,7 +39,7 @@ class HawkesModel:
         self.slot_duration = slot_duration
         self.num_slots = num_slots
         self.history_num_slots = history_num_slots
-        self.total_num_slots = num_slots*slot_duration + self.history_num_slots
+        self.total_num_slots = num_slots + self.history_num_slots
 
         # Hawkes Params
         self.lambda0 = lambda0
@@ -54,8 +55,17 @@ class HawkesModel:
         
         self.history_events, self.future_events, self.total_events = self.simulate_events()
 
+        # type params 
+        self.type = type
+        if self.type == 'mice': 
+            self.type_scaler = 0.5 
+        elif self.type == 'elephent':
+            self.type_scaler = 10
+        else:
+            self.type_scaler = 1
+        
         # initial count
-        self.initial_count = self.counts[self.history_num_slots]
+        self.initial_count = self.counts[self.history_num_slots] * self.type_scaler
 
         
 
@@ -63,7 +73,7 @@ class HawkesModel:
         """
         Takes one step in the Markov Chain by transitioning to the next state based on the transition matrix.
         """
-        current_event= self.future_events[self.time_step]
+        current_event = self.future_events[self.time_step] * self.type_scaler
         self.time_step += 1
 
         return current_event
