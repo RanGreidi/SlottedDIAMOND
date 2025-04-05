@@ -199,7 +199,7 @@ class GraphEnvPower:
         """ draw global graph"""
         save_fig = True
         plt.figure()
-        nx.draw_networkx(self.graph, self.graph_pos, with_labels=True, node_color="tab:blue")
+        nx.draw_networkx(self.graph, self.graph_pos, with_labels=False, node_color="tab:blue", node_size=100)
         plt.axis('off')
         if show_fig:
             plt.show()

@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import networkx as nx
 import os
 import random
-
+import json
 
 def init_seed(seed):
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -365,6 +365,7 @@ def run_predefined_actions(env, actions):
         delay_data = env.get_delay_data(action_as_idx=action_as_idx)
         return rate_date, delay_data
         
+
 def run_Slotted_predefined_actions(env, actions, slot):
     '''  
     This function is identical to run_predefined_actions, but it allocates a new flow with other method (OSPF), when the given actions does not match the
@@ -392,3 +393,12 @@ def run_Slotted_predefined_actions(env, actions, slot):
     rate_date = env.get_rates_data()
     delay_data = env.get_delay_data(action_as_idx=action_as_idx)
     return rate_date, delay_data
+
+def save_arguments_to_file(filename, **kwargs):
+    """
+    Save the provided keyword arguments to a JSON file.
+    :param filename: Name of the file to save the arguments.
+    :param kwargs: Arguments to save.
+    """
+    with open(filename, 'w') as file:
+        json.dump(kwargs, file, indent=4)

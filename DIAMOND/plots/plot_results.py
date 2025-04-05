@@ -1,9 +1,10 @@
 import os.path
 
-# import pandas as pd
+import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
-import matplotlib
+from datetime import datetime
+import pickle
 
 # matplotlib.use('TkAgg')
 
@@ -76,42 +77,141 @@ def plot_all():
                     delay_path='v30e50/random_rayleigh_delay_V30_E50.csv',
                     title='V30E50, rayleigh')
 
-def plot_algorithm_metrics(data_dict, num_flows, seed):
+
+def plot_algorithm_metrics(data_dict, num_flows, seed, Gloval_env, graph_mode, save_fig):
     """
     Plots three graphs for delay, rate, and active flows for different algorithms and saves the figure.
-    
+
     Parameters:
         data_dict (dict): Dictionary containing algorithm metrics as numpy arrays.
                           Keys should be in the format '<Algorithm>_<Metric>'
                           (e.g., 'GRRL_delay', 'GRRL_rate', 'GRRL_active_flows').
         save_path (str): File path to save the figure.
     """
-    save_path = f"metrics_{num_flows}flows_{seed}seed.png"
+
+    base_path = r"C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_arrivals"
+    base_path = os.path.join(base_path, f"{graph_mode}", f"{Gloval_env.kwargs['trx_power_mode']}")
+    subfolder_name = f"{Gloval_env.num_nodes}_Nodes_{Gloval_env.num_edges // 2}_Edges"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Add timestamp
+    subfolder_path = os.path.join(base_path, subfolder_name, f"{timestamp}_{Gloval_env.num_flows}_Flows")
+    # Ensure the directory exists
+    os.makedirs(subfolder_path, exist_ok=True)
+    save_data_path_pickle = os.path.join(subfolder_path, "data.pkl")  # Save as Pickle
+    # Save data_dict as Pickle (optional)
+    with open(save_data_path_pickle, "wb") as pickle_file:
+        pickle.dump(data_dict, pickle_file)
+
+    save_path = os.path.join(subfolder_path, "Metrics_Plots.png")
+
+    # save_path = f"metrics_{num_flows}flows_{seed}seed.png"
     algorithms = ['SlotedDIAMOND', 'DIAMOND', 'GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
     metrics = ['delay', 'rates', 'active_flows']
-    
+
     # Create subplots
     fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
-    
+
     colors = plt.cm.get_cmap("tab10", len(algorithms))  # Use a colormap for distinct colors
-    
+
     for idx, metric in enumerate(metrics):
         ax = axes[idx]
         for i, algo in enumerate(algorithms):
             key = f"{algo}_{metric}"
             if key in data_dict:
                 ax.plot(data_dict[key], label=algo, color=colors(i), alpha=0.8)
-        
+
         ax.set_title(metric.replace('_', ' ').capitalize())
         ax.set_ylabel(metric.capitalize())
         ax.legend()
         ax.grid(True, linestyle='--', alpha=0.6)
-    
+
     axes[-1].set_xlabel("Time Steps")
     plt.tight_layout()
-    plt.savefig(save_path)
-    plt.close()
+    if save_fig:
+        plt.savefig(save_path)
+    plt.show()
+    # plt.close()
+    return subfolder_path
 
+
+def plot_algorithm_mean_performance(flows, algo_names, algo_rates, algo_delays, subfolder_path, save_fig):
+    """
+    Plots rates and delays of multiple algorithms against flow numbers in subplots.
+
+    :param flows: List of flow numbers (X-axis).
+    :param algo_names: List of algorithm names.
+    :param algo_rates: List of lists, where each sublist contains rate values for each algorithm.
+    :param algo_delays: List of lists, where each sublist contains delay values for each algorithm.
+    :param save_arguments: Boolean flag to save the plot.
+    :param subfolder_path: Path to save the figure if save_arguments is True.
+    """
+
+    # File paths for saving data
+    save_plot_path = os.path.join(subfolder_path, 'algorithm_performance_rates_delays.png')
+    save_data_path_pickle = os.path.join(subfolder_path, "performance_data.pkl")  # Save as Pickle
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))  # Create two subplots side by side
+
+    # Define unique colors and markers
+    colors = ['b', 'r', 'darkviolet', 'orange', 'green', 'violet', 'k', 'y']
+    markers = ['o', 'p', '+', '*', '^', '+', 'p', 'v']
+
+    # 📌 **Plot Algorithm Rates**
+    ax1 = axes[0]  # First subplot for rates
+    for idx, algo_name in enumerate(algo_names):
+        color = colors[idx % len(colors)]
+        marker = markers[idx % len(markers)]
+        rates = [algo_rates[i][idx] for i in range(len(flows))]
+
+        ax1.plot(flows, rates, linestyle='-', color=color, marker=marker, markersize=8,
+                 markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+    ax1.set_xticks(flows)
+    ax1.set_xticklabels(flows, fontsize=10)
+    ax1.set_xlabel("Number of Flows", fontsize=12)
+    ax1.set_ylabel("Avg. Flow Rate [Mbps]", fontsize=12)
+    ax1.set_title("Algorithm Performance: Rates vs Flows", fontsize=14)
+    ax1.legend(loc='best', fontsize=10)
+    ax1.grid(True, linestyle='--', linewidth=0.5)
+
+    # 📌 **Plot Algorithm Delays**
+    ax2 = axes[1]  # Second subplot for delays
+    for idx, algo_name in enumerate(algo_names):
+        color = colors[idx % len(colors)]
+        marker = markers[idx % len(markers)]
+        delays = [algo_delays[i][idx] for i in range(len(flows))]
+
+        ax2.plot(flows, delays, linestyle='-', color=color, marker=marker, markersize=8,
+                 markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+    ax2.set_xticks(flows)
+    ax2.set_xticklabels(flows, fontsize=10)
+    ax2.set_xlabel("Number of Flows", fontsize=12)
+    ax2.set_ylabel("Avg. Flow Delays [s]", fontsize=12)
+    ax2.set_title("Algorithm Performance: Delays vs Flows", fontsize=14)
+    ax2.legend(loc='best', fontsize=10)
+    ax2.grid(True, linestyle='--', linewidth=0.5)
+
+    # Adjust layout for better spacing
+    plt.tight_layout()
+
+    # Save and show the plot
+    # Ensure the directory exists
+    # os.makedirs(subfolder_path, exist_ok=True)
+    if save_fig:
+        plt.savefig(save_plot_path, dpi=300)
+
+    plt.show()
+
+    # Save data in Pickle format
+    data_to_save = {
+        "flows": flows,
+        "algo_names": algo_names,
+        "algo_rates": algo_rates,
+        "algo_delays": algo_delays
+    }
+    # Save data in Pickle format (for faster loading in Python)
+    with open(save_data_path_pickle, "wb") as pickle_file:
+        pickle.dump(data_to_save, pickle_file)
 
 if __name__ == "__main__":
 

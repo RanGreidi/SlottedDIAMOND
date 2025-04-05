@@ -4,7 +4,28 @@ from environment.Traffic_Probability_Model import Traffic_Probability_Model
 from environment.Traffic_Probability_HawkesModel import HawkesModel
 
 
-def _get_random_flows(num_nodes, num_flows, demands, slot_duration, num_slots, HawkesParams, seed=1):
+def _get_random_flows_no_arrivals(num_nodes, num_flows, demands=[100], seed=1):
+    """
+    generates random flows
+    :param num_nodes: number of nodes in the communication graph
+    :param num_flows: number of flows in the communication graph
+    :param demands: list of packets demands for flows to choose from
+    :param seed: random seed
+    :return: list of flows as (src, dst, pkt)
+    """
+    flow_demand = [(1000/(pow(i, 3))) for i in range(1, num_flows+1)] #[2, 20, 50 ,100, 200, 9, 7, 500 ,200, 1000][::-1]
+    random.seed(seed)
+    result = []
+    for name in range(num_flows):
+        src, dst = random.sample(range(num_nodes), 2)
+        f = {"source": src,
+             "destination": dst,
+             "packets": random.choice(demands), #random.choice(demands),  # flow_demand[name],
+             "name": name}  # to be changes in the future to markov.state
+        result.append(f)
+    return result
+
+def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration, num_slots, HawkesParams, seed=1):
     """
     generates random flows
     :param num_nodes: number of nodes in the communication graph
@@ -113,7 +134,7 @@ def generate_env(num_nodes=10,
     packets = list(range(int(min_flow_demand), int(max_flow_demand) + delta, delta))
     demands = [random.choice(packets) for _ in range(num_flows)]
     HawkesParams = kwargs.get('HawkesParams')
-    flows, flows_statistics = _get_random_flows(num_nodes=num_nodes, num_flows=num_flows, demands=demands, slot_duration=slot_duration, num_slots=num_slots, HawkesParams=HawkesParams,  seed=seed)
+    flows, flows_statistics = _get_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=num_flows, demands=demands, slot_duration=slot_duration, num_slots=num_slots, HawkesParams=HawkesParams,  seed=seed)
 
     # 3. generate env instance
     # capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=(num_nodes, num_nodes))

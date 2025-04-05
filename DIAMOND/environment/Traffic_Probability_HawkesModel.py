@@ -174,10 +174,10 @@ class HawkesModel:
             interpolated_counts[math.ceil(event_time):] += 1
         return interpolated_counts
 
+
 if __name__ == "__main__":
 
-
-    model = HawkesModel(               
+    model = HawkesModel(
                     lambda0 = 0.9,
                     alpha = 0.5,
                     beta = 0.7,
