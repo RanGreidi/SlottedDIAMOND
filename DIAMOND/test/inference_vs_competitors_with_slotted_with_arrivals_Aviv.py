@@ -95,7 +95,7 @@ class TestvsCompetitors:
                             slot_duration=self.slot_duration,
                             num_slots=self.num_slots,
                             min_flow_demand=kwargs.get('min_flow_demand', 500),  # 500, 200
-                            max_flow_demand=kwargs.get('max_flow_demand', 3000),  # 3000, 1000
+                            max_flow_demand=kwargs.get('max_flow_demand', 1500),  # 3000, 1000
                             min_capacity=kwargs.get('min_capacity', 200),  # 200, 100
                             max_capacity=kwargs.get('max_capacity', 500),  # 500, 200
                             seed=seed,
@@ -116,7 +116,10 @@ class TestvsCompetitors:
                                                                                env_configurations, flows_statistics,
                                                                                grrl_data=True)
             # Run DIAMOND
+            print(f"Started DIAMOND \n")
             _, _, _, _, self.first_step_actions['DIAMOND'] = self.diamond(copy.deepcopy(Gloval_env), grrl_data=True)
+            print(f"Finished DIAMOND \n")
+
             # Run GRRL
             _, _, _, self.first_step_actions['GRRL'], _ = self.grrl(copy.deepcopy(Gloval_env), grrl_data=True)
             # Run competitors
@@ -244,7 +247,7 @@ class TestvsCompetitors:
         labels = self.algos
 
         # manual plot for debug
-        plot_algorithm_metrics(Episode_Avarge_data, num_flows=num_flows, seed=seed)
+        # plot_algorithm_metrics(Episode_Avarge_data, num_flows=num_flows, seed=seed)
 
         return Episode_Avarge_data, labels, average_rates_through_time, average_delays_through_time, subfolder_path
 
@@ -302,8 +305,7 @@ class TestvsCompetitors:
             units = self.units  # 1e6
             initial_delay = algo_delay
             #  -[Megabit]-       -[Mbps]-       ------[microsec]-----    --[micro sec]--     -[micro sec]-
-            delivered_packets = algo_rate * (
-            (self.slot_duration * units - initial_delay)) / units  # rate [Mbps] * (slot_duration [micro sec])/microsec
+            delivered_packets = algo_rate * (self.slot_duration * units - initial_delay) / units  # rate [Mbps] * (slot_duration [micro sec])/microsec
 
             # reduce deliver packets from the flows
             if algo_active_flows:
@@ -414,6 +416,7 @@ class TestvsCompetitors:
                 delays_data[key] = value
         return rates_data, delays_data
 
+
 if __name__ == "__main__":
 
     BASE_PATH = os.path.join("..", "results", "inference_vs_competitors")
@@ -422,13 +425,13 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 10  # 60
-    num_edges = 15  # 90
-    num_actions = 15
+    num_nodes = 40  # 60
+    num_edges = 70  # 90
+    num_actions = 4  # 15
     temperature = 1.2
-    num_episodes = 1
-    episode_from = 7501
-    nb3r_steps = 1
+    num_episodes = 3
+    episode_from = 7500  # 7501
+    nb3r_steps = 100  # 1
 
     trx_power_mode = 'equal'
     rayleigh_scale = 1
@@ -436,27 +439,27 @@ if __name__ == "__main__":
     channel_gain = 1
     min_capacity = 200
     max_capacity = 500
-    min_flow_demand = 5
-    max_flow_demand = 200
+    min_flow_demand = 500   # 5
+    max_flow_demand = 1500  # 200
 
-    pkt_size = 500
+    pkt_size = 100  # 500
     units = 1e6
 
     slot_duration = 1
-    num_slots = 150
+    num_slots = 500
 
-    pkt_arrival_sample_rate = 5
+    pkt_arrival_sample_rate = 30
 
     # Hawkes parms
     HawkesParams = dict(
-        lambda0=0.9,
+        lambda0=0.9,  # 0.9
         alpha=0.5,
         beta=0.7,
         history_num_slots=100,
         allow_Hawkes_arrivals=True,
         elephent_flows_num=10,
-        mice_scaler=0.1,
-        elephent_scaler=0.1)
+        mice_scaler=50,  # 0.1
+        elephent_scaler=100)  # 0.1
 
     # predictor params
     predictor_mode = 'Ideal'  # 'predictor_on' # 'predictor_off'
@@ -471,7 +474,7 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            flows = [5, 10, 20, 30, 40, 50, 600, 110, 120] if GRAPH_MODE == 'random' else \
+            flows = [70, 80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
                     [40, 50, 60, 70, 80, 90, 100, 110, 120]
 
             for num_flows_idx, num_flows in enumerate(flows):

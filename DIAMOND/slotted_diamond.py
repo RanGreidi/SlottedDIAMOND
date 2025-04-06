@@ -46,6 +46,8 @@ class SLOTTED_DIAMOND:
             # create flows for slot for each algo
             slot_flows = self.create_slot_flows(Global_flows)
 
+            print(f'slot {slot}, {len(slot_flows)}/{len(Global_flows)} flows alive')
+
             # Create env for slot
             step_env = GraphEnv(adjacency_matrix=env_configurations['adjacency_matrix'],
                                             bandwidth_matrix=env_configurations['bandwidth_matrix'],
@@ -77,7 +79,9 @@ class SLOTTED_DIAMOND:
 
             # gather data from all slots to be avarge over all episode
             full_run_data.append(slot_data)
-        
+
+            print(f"Finished slot {slot + 1}/{self.num_slots} In initial Slotted_DIAMOND \n")
+
         return full_run_data, Actions
 
     def run_slot(self, env, grrl_data=False):
@@ -142,6 +146,7 @@ class SLOTTED_DIAMOND:
         return new_flows
 
     def update_Global_flows(self, Global_flows, data, slot):
+
         '''
         input:  1. flows list for each algo according to its current state
                 2. rate and delay data for each algo
@@ -168,24 +173,24 @@ class SLOTTED_DIAMOND:
         units = 1e6
         initial_delay = algo_delay
         #  -[Megabit]-       -[Mbps]-       ------[microsec]-----    --[micro sec]--     -[micro sec]-
-        delivered_packets =  algo_rate * ( (self.slot_duration*units - initial_delay) )     /units          # rate [Mbps] * (slot_duration [micro sec])/microsec
+        delivered_packets = algo_rate * (self.slot_duration*units - initial_delay) / units          # rate [Mbps] * (slot_duration [micro sec])/microsec
 
         # removing flow pkts according to arrvied pkts
         if algo_active_flows:
-            for idx_in_metrics_for_flow,flow_name in enumerate(algo_active_flows):
-                flow = get_flow_by_name(Global_flows,flow_name) # flow is a pointer to the current flow in the Algos_Global_flows
+            for idx_in_metrics_for_flow, flow_name in enumerate(algo_active_flows):
+                flow = get_flow_by_name(Global_flows,flow_name)  # flow is a pointer to the current flow in the Algos_Global_flows
                 if flow['packets'] <= delivered_packets[idx_in_metrics_for_flow]:
                     flow['packets'] = 0
                 else:
-                    flow['packets'] -= delivered_packets[idx_in_metrics_for_flow]
+                    flow['packets'] = (flow['packets'] - delivered_packets[idx_in_metrics_for_flow])  # my change, packets are ints
         
         # adding flow pkts according to arrivle PREDICTION
         if slot % self.pkt_arrival_sample_rate == 0:
             if self.predictor_mode == 'Ideal':
                 for flow_statistic in self.flows_statistics:
-                    entered_new_pkts = flow_statistic.future_events[slot]
+                    entered_new_pkts = flow_statistic.future_events[slot] * flow_statistic.type_scaler  # my change to match multiplication in .step() .flow_statistic.future_events[slot]
                     flow_name = flow_statistic.flow_name
-                    flow = get_flow_by_name(Global_flows,flow_name) 
+                    flow = get_flow_by_name(Global_flows, flow_name)
                     flow['packets'] += entered_new_pkts
 
             if self.predictor_mode == 'predictor_on':
@@ -193,7 +198,7 @@ class SLOTTED_DIAMOND:
             if self.predictor_mode == 'predictor_off':
                 pass
 
-        return  Global_flows 
+        return Global_flows
     
     def create_initial_slot_data(self):
         return {

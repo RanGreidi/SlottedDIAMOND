@@ -70,9 +70,11 @@ class HawkesModel:
             self.type_scaler = 1
         
         # initial count
-        self.initial_count = self.counts[self.history_num_slots] * self.type_scaler
+        # self.initial_count = self.counts[self.history_num_slots] * self.type_scaler
 
-        
+        # My change to match magnitude of self.future_events
+        self.initial_count = self.history_events[-1] * self.type_scaler
+
 
     def step(self):
         """
@@ -84,7 +86,7 @@ class HawkesModel:
         return current_event
     
     def simulate_events(self):
-        total_run = np.append(self.history_count,self.future_count)
+        total_run = np.append(self.history_count, self.future_count)
         history_events = self.history_count
         future_events = self.future_count
         

@@ -146,16 +146,16 @@ class DQN_GNN:
         for e in k_envs:
             state = e.reset()
             tf_state = [tf.convert_to_tensor(s) for s in state]
-            tf_state = [tf.cast(x, tf.int32) if x.dtype == tf.int64 else x for x in tf_state]
+            # tf_state = [tf.cast(x, tf.int32) if x.dtype == tf.int64 else x for x in tf_state]
 
             # Ensure correct dtype conversion:
-            # tf_state = [
-            #     tf.cast(x, tf.float32) if x.dtype == tf.float64 else  # Convert float64 → float32
-            #     tf.cast(x, tf.int32) if x.dtype == tf.int64 else  # Convert int64 → int32
-            #     tf.constant(bool(x), dtype=tf.bool) if isinstance(x, bool) else  # Ensure boolean dtype
-            #     x
-            #     for x in tf_state
-            # ]
+            tf_state = [
+                tf.cast(x, tf.float32) if x.dtype == tf.float64 else  # Convert float64 → float32
+                tf.cast(x, tf.int32) if x.dtype == tf.int64 else  # Convert int64 → int32
+                tf.constant(bool(x), dtype=tf.bool) if isinstance(x, bool) else  # Ensure boolean dtype
+                x
+                for x in tf_state
+            ]
 
             q_val = self.model(*tf_state)
             q_vals.append(q_val[0][0].numpy())

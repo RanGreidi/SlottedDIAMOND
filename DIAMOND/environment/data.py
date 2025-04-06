@@ -1,3 +1,5 @@
+import random
+
 from environment import GraphEnvPower as GraphEnv
 from environment.utils import *
 from environment.Traffic_Probability_Model import Traffic_Probability_Model
@@ -39,6 +41,8 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
 
     flows = []
     flows_statistics = []
+
+    types = ['elephent', 'mice']
     for name in range(num_flows):
         src, dst = random.sample(range(num_nodes), 2)
 
@@ -54,7 +58,7 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
                                         slot_duration=slot_duration,
                                         history_num_slots=HawkesParams['history_num_slots'],
 
-                                        type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice',
+                                        type=random.choice(types),  #  type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice'
                                         mice_scaler=HawkesParams['mice_scaler'],
                                         elephent_scaler=HawkesParams['elephent_scaler'],
 
@@ -62,7 +66,7 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
         
         f = {"source": src,
              "destination": dst,
-             "packets": flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name],
+             "packets": random.choice(demands), # flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name]
              "name": name} # to be changes in the future to markov.state         
         
         flows.append(f)
@@ -130,11 +134,11 @@ def generate_env(num_nodes=10,
         num_nodes = 36
 
     # 2. create random flows
-    delta = 2
+    delta = 10
     packets = list(range(int(min_flow_demand), int(max_flow_demand) + delta, delta))
-    demands = [random.choice(packets) for _ in range(num_flows)]
+    # demands = [random.choice(packets) for _ in range(num_flows)]
     HawkesParams = kwargs.get('HawkesParams')
-    flows, flows_statistics = _get_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=num_flows, demands=demands, slot_duration=slot_duration, num_slots=num_slots, HawkesParams=HawkesParams,  seed=seed)
+    flows, flows_statistics = _get_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=num_flows, demands=packets, slot_duration=slot_duration, num_slots=num_slots, HawkesParams=HawkesParams,  seed=seed)
 
     # 3. generate env instance
     # capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=(num_nodes, num_nodes))

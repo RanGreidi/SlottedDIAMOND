@@ -380,7 +380,7 @@ def run_Slotted_predefined_actions(env, actions, slot):
         # else allocate action randomly or perform ospf
         else:
             # random decision each slot. TODO: add radnom/OSPF/whatever
-            current_slot_actions.append( random.randint(0,env.k-1) )
+            current_slot_actions.append( random.randint(0,env.k-1))
 
     # Note! actions - this list needs to be ordered as env.flows is ordered! for example:
     #  if env.flows is [flow_name_2, flow_name_3, flow_name_4] than actions needs to be 
