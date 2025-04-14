@@ -356,7 +356,7 @@ if __name__ == "__main__":
     num_actions = 15
     temperature = 1.2
     num_episodes = 1
-    episode_from = 7501
+    episode_from = 7500
     nb3r_steps = 1
 
     trx_power_mode = 'equal'
@@ -372,20 +372,20 @@ if __name__ == "__main__":
     units = 1e6
 
     slot_duration = 1
-    num_slots = 150
+    num_slots = 50
 
-    pkt_arrival_sample_rate = 5
+    pkt_arrival_sample_rate = 1
     
     # Hawkes parms
     HawkesParams = dict(
-    lambda0 = 0.9,
+    lambda0 = 0.2,
     alpha = 0.5,
     beta = 0.7,
     history_num_slots = 100,
     allow_Hawkes_arrivals = True,
     elephent_flows_num = 10,
-    mice_scaler = 0.1,
-    elephent_scaler = 0.1)
+    mice_scaler = 1,
+    elephent_scaler = 1)
 
     # predictor params    
     predictor_mode = 'Ideal' # 'predictor_on' # 'predictor_off'
@@ -400,7 +400,7 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            for num_flows in [300, 400, 500, 600, 700, 800, 900] if GRAPH_MODE == 'random' else \
+            for num_flows in [30, 40, 500, 600, 700, 800, 900] if GRAPH_MODE == 'random' else \
                              [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
                 
                 alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, episode_from=episode_from,
