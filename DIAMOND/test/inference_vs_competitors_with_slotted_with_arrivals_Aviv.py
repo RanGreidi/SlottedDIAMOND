@@ -5,6 +5,8 @@ from datetime import datetime
 import shutil
 import copy
 import sys
+import pickle
+
 
 sys.path.insert(0, 'DIAMOND')
 ##sys.path.insert(0, '/work_space/project2/DIAMOND-master/DIAMOND-master')
@@ -69,7 +71,7 @@ class TestvsCompetitors:
             'IACR': IACR(delta=0.5, alpha=1.3),
         }
 
-    def __call__(self, **kwargs):
+    def __call__(self, data_paths_list=None, **kwargs):
 
         # update variables
         self.num_nodes = kwargs.get('num_nodes', 10)
@@ -83,145 +85,161 @@ class TestvsCompetitors:
 
         for episode in range(self.num_episodes):
 
-            print(f'\nStarting episode {episode + 1}/{self.num_episodes}\n')
+            if not data_paths_list:
 
-            # seed
-            seed = SEED + (episode + 1) + self.episode_from + 1
+                print(f'\nStarting episode {episode + 1}/{self.num_episodes}\n')
 
-            env_args = dict(num_nodes=self.num_nodes,
-                            num_edges=self.num_edges,
-                            num_actions=self.num_actions,
-                            num_flows=self.num_flows,
-                            slot_duration=self.slot_duration,
-                            num_slots=self.num_slots,
-                            min_flow_demand=kwargs.get('min_flow_demand', 500),  # 500, 200
-                            max_flow_demand=kwargs.get('max_flow_demand', 1500),  # 3000, 1000
-                            min_capacity=kwargs.get('min_capacity', 200),  # 200, 100
-                            max_capacity=kwargs.get('max_capacity', 500),  # 500, 200
-                            seed=seed,
-                            graph_mode=kwargs.get('graph_mode', 'random'),
-                            trx_power_mode=kwargs.get('trx_power_mode', 'equal'),
-                            rayleigh_scale=kwargs.get('rayleigh_scale'),
-                            max_trx_power=kwargs.get('max_trx_power'),
-                            channel_gain=kwargs.get('channel_gain'))
+                # seed
+                seed = SEED + (episode + 1) + self.episode_from + 1
 
-            # generate env
-            Gloval_env, env_configurations, flows_statistics = generate_env(**env_args,
-                                                                            HawkesParams=self.HawkesParams)
+                env_args = dict(num_nodes=self.num_nodes,
+                                num_edges=self.num_edges,
+                                num_actions=self.num_actions,
+                                num_flows=self.num_flows,
+                                slot_duration=self.slot_duration,
+                                num_slots=self.num_slots,
+                                pkt_size=self.pkt_size,
+                                units=self.units,
+                                pkt_arrival_sample_rate=self.pkt_arrival_sample_rate,
+                                min_flow_demand=kwargs.get('min_flow_demand', 500),  # 500, 200
+                                max_flow_demand=kwargs.get('max_flow_demand', 1500),  # 3000, 1000
+                                min_capacity=kwargs.get('min_capacity', 200),  # 200, 100
+                                max_capacity=kwargs.get('max_capacity', 500),  # 500, 200
+                                seed=seed,
+                                graph_mode=kwargs.get('graph_mode', 'random'),
+                                trx_power_mode=kwargs.get('trx_power_mode', 'equal'),
+                                rayleigh_scale=kwargs.get('rayleigh_scale'),
+                                max_trx_power=kwargs.get('max_trx_power'),
+                                channel_gain=kwargs.get('channel_gain'))
 
-            # generate first decisions
+                # generate env
+                Gloval_env, env_configurations, flows_statistics = generate_env(**env_args,
+                                                                                HawkesParams=self.HawkesParams)
 
-            # Run Slotted DIAMOND
-            _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env),
-                                                                               env_configurations, flows_statistics,
-                                                                               grrl_data=True)
-            # Run DIAMOND
-            print(f"Started DIAMOND \n")
-            _, _, _, _, self.first_step_actions['DIAMOND'] = self.diamond(copy.deepcopy(Gloval_env), grrl_data=True)
-            print(f"Finished DIAMOND \n")
+                # generate first decisions
 
-            # Run GRRL
-            _, _, _, self.first_step_actions['GRRL'], _ = self.grrl(copy.deepcopy(Gloval_env), grrl_data=True)
-            # Run competitors
-            for name, comp in zip(self.competitors.keys(), self.competitors.values()):
-                _, _, _, _, self.first_step_actions[name] = comp.run(copy.deepcopy(Gloval_env), seed)
-
-            # initialize Global flows list for each algo (entire run flows)
-            Algos_Global_flows = {
-                'SlotedDIAMOND': copy.deepcopy(env_configurations['flows']),
-                'DIAMOND': copy.deepcopy(env_configurations['flows']),
-                'GRRL': copy.deepcopy(env_configurations['flows']),
-                'DQN+GNN': copy.deepcopy(env_configurations['flows']),
-                'OSPF': copy.deepcopy(env_configurations['flows']),
-                'RandomBL': copy.deepcopy(env_configurations['flows']),
-                'DIAR': copy.deepcopy(env_configurations['flows']),
-                'IACR': copy.deepcopy(env_configurations['flows']),
-            }
-
-            full_run_data = []
-
-            for slot in range(self.num_slots):
-
-                # initalze data for slot
-                slot_data = self.create_initial_slot_data()
-
-                # create flows for slot for each algo
-                algos_slot_flows = self.create_slot_flows(Algos_Global_flows)
-
-                # Create env for slot
-                Algos_step_envs = {algo: GraphEnv(adjacency_matrix=env_configurations['adjacency_matrix'],
-                                                  bandwidth_matrix=env_configurations['bandwidth_matrix'],
-                                                  interference_matrix=env_configurations['interference_matrix'],
-                                                  node_positions=env_configurations['node_positions'],
-                                                  flows=algos_slot_flows[algo],
-                                                  k=env_configurations['k'],
-                                                  direction=env_configurations['direction'],
-                                                  reward_balance=env_configurations['reward_balance'],
-                                                  algo=algo,
-                                                  seed=env_configurations['seed'],
-                                                  **kwargs)
-
-                                   for algo in self.algos}
-
-                # -----Run ALGOS------
-
-                # Run SlottedDIAMOND
-                if Algos_step_envs['SlotedDIAMOND'].flows:
-                    SlotedDIAMOND_rates_data, SlotedDIAMOND_delay_data = run_Slotted_predefined_actions(Algos_step_envs['SlotedDIAMOND'], self.first_step_actions['SlotedDIAMOND'], slot)
-                    slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['SlotedDIAMOND'].flows]
-                    slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
-                    slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
-
+                # Run Slotted DIAMOND
+                _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env),
+                                                                                   env_configurations, flows_statistics,
+                                                                                   grrl_data=True)
                 # Run DIAMOND
-                if Algos_step_envs['DIAMOND'].flows:
-                    diamond_rates_data, diamond_delay_data = run_predefined_actions(Algos_step_envs['DIAMOND'], self.first_step_actions['DIAMOND'])
-                    slot_data['DIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['DIAMOND'].flows]
-                    slot_data['DIAMOND_delay'] = diamond_delay_data['delay_per_flow']
-                    slot_data['DIAMOND_rates'] = diamond_rates_data['rate_per_flow']
+                print(f"Started DIAMOND \n")
+                _, _, _, _, self.first_step_actions['DIAMOND'] = self.diamond(copy.deepcopy(Gloval_env), grrl_data=True)
+                print(f"Finished DIAMOND \n")
 
                 # Run GRRL
-                if Algos_step_envs['GRRL'].flows:
-                    grrl_rates_data, grrl_delay_data = run_predefined_actions(Algos_step_envs['GRRL'],
-                                                                              self.first_step_actions['GRRL'])
-                    slot_data['GRRL_active_flows'] = [flow['name'] for flow in Algos_step_envs['GRRL'].flows]
-                    slot_data['GRRL_delay'] = grrl_delay_data['delay_per_flow']
-                    slot_data['GRRL_rates'] = grrl_rates_data['rate_per_flow']
-
+                _, _, _, self.first_step_actions['GRRL'], _ = self.grrl(copy.deepcopy(Gloval_env), grrl_data=True)
                 # Run competitors
+                print(f"Started all competition \n")
                 for name, comp in zip(self.competitors.keys(), self.competitors.values()):
-                    if Algos_step_envs[name].flows:
-                        rates_data, delay_data = run_predefined_actions(Algos_step_envs[name],
-                                                                        self.first_step_actions[name])
-                        slot_data[f"{name}_active_flows"] = [flow['name'] for flow in Algos_step_envs[name].flows]
-                        slot_data[f"{name}_delay"] = delay_data['delay_per_flow']
-                        slot_data[f"{name}_rates"] = rates_data['rate_per_flow']
+                    _, _, _, _, self.first_step_actions[name] = comp.run(copy.deepcopy(Gloval_env), seed)
+                print(f"Finished all competition \n")
 
-                        # Update Algos_Global_flows according to preformance of each algo
-                Algos_Global_flows = self.update_Global_flows(Algos_Global_flows, flows_statistics, slot_data, slot)
+                # initialize Global flows list for each algo (entire run flows)
+                Algos_Global_flows = {
+                    'SlotedDIAMOND': copy.deepcopy(env_configurations['flows']),
+                    'DIAMOND': copy.deepcopy(env_configurations['flows']),
+                    'GRRL': copy.deepcopy(env_configurations['flows']),
+                    'DQN+GNN': copy.deepcopy(env_configurations['flows']),
+                    'OSPF': copy.deepcopy(env_configurations['flows']),
+                    'RandomBL': copy.deepcopy(env_configurations['flows']),
+                    'DIAR': copy.deepcopy(env_configurations['flows']),
+                    'IACR': copy.deepcopy(env_configurations['flows']),
+                }
 
-                # gather data from all slots to be avarge over all episode
-                full_run_data.append(slot_data)
+                full_run_data = []
 
-                print(f"Finished slot {slot+1}/{self.num_slots} \n")
+                print(f'\nstarting real run\n')
+                for slot in range(self.num_slots):
 
-            # Modify Global_data to be avarged over all episodes
-            Episode_Avarge_data = self.prepare_end_of_run_data(full_run_data, Episode_Avarge_data)
+                    # initalze data for slot
+                    slot_data = self.create_initial_slot_data()
 
-            this_Episode_Avarge_data = self.prepare_one_end_of_run_data(full_run_data)
+                    # create flows for slot for each algo
+                    algos_slot_flows = self.create_slot_flows(Algos_Global_flows)
 
-            # plot individual episode results.
-            save = True
-            subfolder_path = plot_algorithm_metrics(this_Episode_Avarge_data, num_flows=num_flows, seed=seed,
-                                                    Gloval_env=Gloval_env,
-                                                    graph_mode=kwargs['graph_mode'], save_fig=save)
-            # save generate_env args
-            file_path = os.path.join(subfolder_path, "generate_env_args.json")
-            save_arguments_to_file(filename=file_path, args=env_args)
-            # save Hawks model params
-            file_path = os.path.join(subfolder_path, "Hawkes_params.json")
-            save_arguments_to_file(filename=file_path, args=self.HawkesParams)
+                    # Create env for slot
+                    Algos_step_envs = {algo: GraphEnv(adjacency_matrix=env_configurations['adjacency_matrix'],
+                                                      bandwidth_matrix=env_configurations['bandwidth_matrix'],
+                                                      interference_matrix=env_configurations['interference_matrix'],
+                                                      node_positions=env_configurations['node_positions'],
+                                                      flows=algos_slot_flows[algo],
+                                                      k=env_configurations['k'],
+                                                      direction=env_configurations['direction'],
+                                                      reward_balance=env_configurations['reward_balance'],
+                                                      algo=algo,
+                                                      seed=env_configurations['seed'],
+                                                      **kwargs)
 
-            Gloval_env.show_graph(save_path=os.path.join(subfolder_path, "graph.png"))
+                                       for algo in self.algos}
+
+                    print(f'slot {slot}, {len(Algos_step_envs["SlotedDIAMOND"].flows)}/{len(Gloval_env.flows)} flows alive')
+
+                    # -----Run ALGOS------
+
+                    # Run SlottedDIAMOND
+                    if Algos_step_envs['SlotedDIAMOND'].flows:
+                        SlotedDIAMOND_rates_data, SlotedDIAMOND_delay_data = run_Slotted_predefined_actions(Algos_step_envs['SlotedDIAMOND'], self.first_step_actions['SlotedDIAMOND'], slot)
+                        slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['SlotedDIAMOND'].flows]
+                        slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
+                        slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
+
+                    # Run DIAMOND
+                    if Algos_step_envs['DIAMOND'].flows:
+                        diamond_rates_data, diamond_delay_data = run_predefined_actions(Algos_step_envs['DIAMOND'], self.first_step_actions['DIAMOND'])
+                        slot_data['DIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['DIAMOND'].flows]
+                        slot_data['DIAMOND_delay'] = diamond_delay_data['delay_per_flow']
+                        slot_data['DIAMOND_rates'] = diamond_rates_data['rate_per_flow']
+
+                    # Run GRRL
+                    if Algos_step_envs['GRRL'].flows:
+                        grrl_rates_data, grrl_delay_data = run_predefined_actions(Algos_step_envs['GRRL'],
+                                                                                  self.first_step_actions['GRRL'])
+                        slot_data['GRRL_active_flows'] = [flow['name'] for flow in Algos_step_envs['GRRL'].flows]
+                        slot_data['GRRL_delay'] = grrl_delay_data['delay_per_flow']
+                        slot_data['GRRL_rates'] = grrl_rates_data['rate_per_flow']
+
+                    # Run competitors
+                    for name, comp in zip(self.competitors.keys(), self.competitors.values()):
+                        if Algos_step_envs[name].flows:
+                            rates_data, delay_data = run_predefined_actions(Algos_step_envs[name],
+                                                                            self.first_step_actions[name])
+                            slot_data[f"{name}_active_flows"] = [flow['name'] for flow in Algos_step_envs[name].flows]
+                            slot_data[f"{name}_delay"] = delay_data['delay_per_flow']
+                            slot_data[f"{name}_rates"] = rates_data['rate_per_flow']
+
+                            # Update Algos_Global_flows according to preformance of each algo
+                    Algos_Global_flows = self.update_Global_flows(Algos_Global_flows, flows_statistics, slot_data, slot)
+
+                    # gather data from all slots to be avarge over all episode
+                    full_run_data.append(slot_data)
+
+                    print(f"Finished slot {slot + 1}/{self.num_slots} In Real Slotted_DIAMOND \n")
+
+                # Modify Global_data to be avarged over all episodes
+                Episode_Avarge_data = self.prepare_end_of_run_data(full_run_data, Episode_Avarge_data)
+
+                this_Episode_Avarge_data = self.prepare_one_end_of_run_data(full_run_data)
+
+                # plot individual episode results.
+                save = True
+                subfolder_path = plot_algorithm_metrics(this_Episode_Avarge_data, num_flows=num_flows, seed=seed,
+                                                        Gloval_env=Gloval_env,
+                                                        graph_mode=kwargs['graph_mode'], save_fig=save)
+                # save generate_env args
+                file_path = os.path.join(subfolder_path, "generate_env_args.json")
+                save_arguments_to_file(filename=file_path, args=env_args)
+                # save Hawks model params
+                file_path = os.path.join(subfolder_path, "Hawkes_params.json")
+                save_arguments_to_file(filename=file_path, args=self.HawkesParams)
+
+                Gloval_env.show_graph(save_path=os.path.join(subfolder_path, "graph.png"))
+
+            if data_paths_list:
+                # Load the data from the pickle file
+                subfolder_path = data_paths_list[episode]
+                with open(os.path.join(subfolder_path, "data.pkl"), "rb") as pickle_file:
+                    this_Episode_Avarge_data = pickle.load(pickle_file)
 
             """
             My adding
@@ -287,9 +305,10 @@ class TestvsCompetitors:
         '''
 
         # adding flow pkts according to arrivle statistics
-        if slot % self.pkt_arrival_sample_rate == 0:
+        if slot % self.pkt_arrival_sample_rate == 0 and slot != 0:
+        # if slot % self.pkt_arrival_sample_rate == 0:
             for flow_statistic in flows_statistics:
-                entered_new_pkts = flow_statistic.step()
+                entered_new_pkts = flow_statistic.step(slot=slot)
                 flow_name = flow_statistic.flow_name
                 for algo in self.algos:
                     flow = get_flow_by_name(Algos_Global_flows[algo], flow_name)
@@ -425,8 +444,8 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 40  # 60
-    num_edges = 70  # 90
+    num_nodes = 30  # 60
+    num_edges = 50  # 90
     num_actions = 4  # 15
     temperature = 1.2
     num_episodes = 3
@@ -437,29 +456,29 @@ if __name__ == "__main__":
     rayleigh_scale = 1
     max_trx_power = 10
     channel_gain = 1
-    min_capacity = 200
-    max_capacity = 500
-    min_flow_demand = 500   # 5
-    max_flow_demand = 1500  # 200
+    min_capacity = 200  # 200
+    max_capacity = 500  # 500
+    min_flow_demand = 300   # 5, 500
+    max_flow_demand = 2000  # 200, 2000
 
-    pkt_size = 100  # 500
+    pkt_size = 100  # 500, 100
     units = 1e6
 
     slot_duration = 1
-    num_slots = 500
+    num_slots = 100  # 150
 
-    pkt_arrival_sample_rate = 30
+    pkt_arrival_sample_rate = 5 # 5
 
     # Hawkes parms
     HawkesParams = dict(
-        lambda0=0.9,  # 0.9
-        alpha=0.5,
-        beta=0.7,
-        history_num_slots=100,
+        lambda0=0.005,  # 0.9
+        alpha=0.025,  # 0.5 0.4
+        beta=0.0001,  # 0.7 0.8
+        history_num_slots=200, # 100
         allow_Hawkes_arrivals=True,
         elephent_flows_num=10,
-        mice_scaler=50,  # 0.1
-        elephent_scaler=100)  # 0.1
+        mice_scaler=20,  # 0.1, 50, 150
+        elephent_scaler=50)  # 0.1, 100, 350
 
     # predictor params
     predictor_mode = 'Ideal'  # 'predictor_on' # 'predictor_off'
@@ -474,7 +493,9 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            flows = [70, 80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
+            data_paths_list_for_all_flows = []
+
+            flows = [100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200] if GRAPH_MODE == 'random' else \
                     [40, 50, 60, 70, 80, 90, 100, 110, 120]
 
             for num_flows_idx, num_flows in enumerate(flows):
@@ -488,13 +509,14 @@ if __name__ == "__main__":
                                         pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units,
                                         HawkesParams=HawkesParams)
 
-                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows,
-                                                                                                           num_actions=num_actions,
-                                                                                                           graph_mode=GRAPH_MODE,
-                                                                                                           trx_power_mode=trx_power_mode, rayleigh_scale=rayleigh_scale,
-                                                                                                           max_trx_power=max_trx_power, channel_gain=channel_gain,
-                                                                                                           min_capacity=min_capacity, max_capacity=max_capacity,
-                                                                                                           min_flow_demand=min_flow_demand, max_flow_demand=max_flow_demand)
+                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=None,  # data_paths_list=data_paths_list_for_all_flows[num_flows_idx]
+                                                                                                            num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows,
+                                                                                                            num_actions=num_actions,
+                                                                                                            graph_mode=GRAPH_MODE,
+                                                                                                            trx_power_mode=trx_power_mode, rayleigh_scale=rayleigh_scale,
+                                                                                                            max_trx_power=max_trx_power, channel_gain=channel_gain,
+                                                                                                            min_capacity=min_capacity, max_capacity=max_capacity,
+                                                                                                            min_flow_demand=min_flow_demand, max_flow_demand=max_flow_demand)
 
                 data_rates.append(list(average_rates_through_time.values()))
                 data_delay.append(list(average_delays_through_time.values()))

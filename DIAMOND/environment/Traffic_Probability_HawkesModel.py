@@ -19,7 +19,7 @@ class HawkesModel:
                 type,
                 mice_scaler=1,
                 elephent_scaler=1,
-                seed = 123):
+                seed=123):
         
         """
         Initializes the Markov chain.
@@ -33,6 +33,7 @@ class HawkesModel:
         self.source = source
         self.destination = destination
         self.flow_name = flow_name
+
         self.seed = seed + 10000*self.flow_name
         self.rng = np.random.default_rng(self.seed)  # Use NumPy's random generator for better reproducibility and to isolate from the rest of my project
 
@@ -76,12 +77,12 @@ class HawkesModel:
         self.initial_count = self.history_events[-1] * self.type_scaler
 
 
-    def step(self):
+    def step(self, slot):
         """
         Takes one step in the Markov Chain by transitioning to the next state based on the transition matrix.
         """
-        current_event = self.future_events[self.time_step] * self.type_scaler
-        self.time_step += 1
+        current_event = self.future_events[slot] * self.type_scaler  # self.future_events[self.time_step] * self.type_scaler
+        # self.time_step += 1
 
         return current_event
     

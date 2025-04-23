@@ -36,6 +36,7 @@ class SLOTTED_DIAMOND:
         Global_flows = Gloval_env.flows
         full_run_data = []
         Actions = []
+        all_slotted_paths = [[] for _ in range(self.num_slots)]
         self.flows_statistics = flows_statistics
 
         for slot in range(self.num_slots):  
@@ -61,7 +62,8 @@ class SLOTTED_DIAMOND:
 
             # Run SLotted DIAMOND
             if step_env.flows:
-                _, _, _, slot_action = self.run_slot(step_env, grrl_data=grrl_data)
+                slot_paths, _, _, slot_action = self.run_slot(step_env, grrl_data=grrl_data)
+                all_slotted_paths[slot].append(slot_paths)
                 SlotedDIAMOND_delay_data = step_env.get_delay_data()
                 SlotedDIAMOND_rates_data = step_env.get_rates_data()
                 slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in step_env.flows]
@@ -185,7 +187,8 @@ class SLOTTED_DIAMOND:
                     flow['packets'] = (flow['packets'] - delivered_packets[idx_in_metrics_for_flow])  # my change, packets are ints
         
         # adding flow pkts according to arrivle PREDICTION
-        if slot % self.pkt_arrival_sample_rate == 0:
+        if (slot % self.pkt_arrival_sample_rate == 0) and slot != 0:
+        # if slot % self.pkt_arrival_sample_rate == 0:
             if self.predictor_mode == 'Ideal':
                 for flow_statistic in self.flows_statistics:
                     entered_new_pkts = flow_statistic.future_events[slot] * flow_statistic.type_scaler  # my change to match multiplication in .step() .flow_statistic.future_events[slot]

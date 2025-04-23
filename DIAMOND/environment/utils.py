@@ -394,6 +394,7 @@ def run_Slotted_predefined_actions(env, actions, slot):
     delay_data = env.get_delay_data(action_as_idx=action_as_idx)
     return rate_date, delay_data
 
+
 def save_arguments_to_file(filename, **kwargs):
     """
     Save the provided keyword arguments to a JSON file.
@@ -402,3 +403,9 @@ def save_arguments_to_file(filename, **kwargs):
     """
     with open(filename, 'w') as file:
         json.dump(kwargs, file, indent=4)
+
+
+def load_json_file(filename):
+    with open(filename, 'r') as file:
+        arguments = json.load(file)
+    return arguments

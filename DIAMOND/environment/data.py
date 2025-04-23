@@ -36,6 +36,8 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
     :param seed: random seed
     :return: list of flows as (src, dst, pkt)
     """
+
+    # py_rng = random.Random(seed)
     random.seed(seed)
     flow_demand = demands
 
@@ -46,14 +48,41 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
     for name in range(num_flows):
         src, dst = random.sample(range(num_nodes), 2)
 
+        # flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
+        #                                 lambda0=HawkesParams['lambda0'],
+        #                                 alpha=HawkesParams['alpha'],
+        #                                 beta=HawkesParams['beta'],
+        #
+        #                                 source=src,
+        #                                 destination=dst,
+        #                                 flow_name=name,
+        #                                 num_slots=num_slots,
+        #                                 slot_duration=slot_duration,
+        #                                 history_num_slots=HawkesParams['history_num_slots'],
+        #
+        #                                 type=random.choice(types),  #  type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice'
+        #                                 mice_scaler=HawkesParams['mice_scaler'],
+        #                                 elephent_scaler=HawkesParams['elephent_scaler'],
+        #
+        #                                 seed=seed)
+
+        f = {"source": src,
+             "destination": dst,
+             "packets": random.choice(demands), # flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name]
+             "name": name} # to be changes in the future to markov.state
+
+        flows.append(f)
+        # flows_statistics.append(flow_statistics)
+
+    for flow in flows:
         flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
-                                        lambda0 = HawkesParams['lambda0'], 
-                                        alpha = HawkesParams['alpha'],
-                                        beta = HawkesParams['beta'],                                        
-                                        
-                                        source=src,
-                                        destination=dst,
-                                        flow_name=name,
+                                        lambda0=HawkesParams['lambda0'],
+                                        alpha=HawkesParams['alpha'],
+                                        beta=HawkesParams['beta'],
+
+                                        source=flow["source"],
+                                        destination=flow["destination"],
+                                        flow_name=flow["name"],
                                         num_slots=num_slots,
                                         slot_duration=slot_duration,
                                         history_num_slots=HawkesParams['history_num_slots'],
@@ -63,15 +92,8 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
                                         elephent_scaler=HawkesParams['elephent_scaler'],
 
                                         seed=seed)
-        
-        f = {"source": src,
-             "destination": dst,
-             "packets": random.choice(demands), # flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name]
-             "name": name} # to be changes in the future to markov.state         
-        
-        flows.append(f)
         flows_statistics.append(flow_statistics)
-    
+
     return flows, flows_statistics
 
 
