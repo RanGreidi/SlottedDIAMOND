@@ -16,9 +16,11 @@ class HawkesModel:
                 num_slots,
                 slot_duration,
                 history_num_slots,
+                pkt_arrival_sample_rate,
                 type,
                 mice_scaler=1,
                 elephent_scaler=1,
+                ManualAdded_Fixed_InitalPkts=1,
                 seed = 123):
         
         """
@@ -40,11 +42,11 @@ class HawkesModel:
         self.elephent_scaler=elephent_scaler
 
         # run time params
-        self.time_step = 0
         self.slot_duration = slot_duration
         self.num_slots = num_slots
         self.history_num_slots = history_num_slots
         self.total_num_slots = num_slots + self.history_num_slots
+        self.pkt_arrival_sample_rate = pkt_arrival_sample_rate
 
         # Hawkes Params
         self.lambda0 = lambda0
@@ -70,17 +72,17 @@ class HawkesModel:
             self.type_scaler = 1
         
         # initial count
-        self.initial_count = self.counts[self.history_num_slots] * self.type_scaler
+        self.ManualAdded_Fixed_InitalPkts = ManualAdded_Fixed_InitalPkts
+        self.initial_count = (self.counts[self.history_num_slots] + self.ManualAdded_Fixed_InitalPkts) * self.type_scaler
 
         
 
-    def step(self):
+    def step(self, slot):
         """
         Takes one step in the Markov Chain by transitioning to the next state based on the transition matrix.
         """
-        current_event = self.future_events[self.time_step] * self.type_scaler
-        self.time_step += 1
-
+        # current_event = self.future_events[slot] * self.type_scaler
+        current_event = sum(self.future_events[slot-self.pkt_arrival_sample_rate:slot]) * self.type_scaler
         return current_event
     
     def simulate_events(self):
@@ -188,6 +190,7 @@ if __name__ == "__main__":
                     num_slots=60,
                     slot_duration=1,
                     history_num_slots=100,
+                    pkt_arrival_sample_rate=1,
                     type='elephent',
                     mice_scaler = 0.1,
                     elephent_scaler = 0.1,
