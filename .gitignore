@@ -12,3 +12,5 @@ results/*
 result/*
 result
 *.png
+*.csv
+*.vscode

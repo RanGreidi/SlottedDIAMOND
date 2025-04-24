@@ -6,7 +6,7 @@ import shutil
 import copy
 import sys
 sys.path.insert(0, 'DIAMOND')
-##sys.path.insert(0, '/work_space/project2/DIAMOND-master/DIAMOND-master')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../SlottedDIAMOND")))
 
 from diamond import DIAMOND
 from plots.plot_results import plot_algorithm_metrics
@@ -390,7 +390,7 @@ if __name__ == "__main__":
     ManualAdded_Fixed_InitalPkts=100)
 
     # predictor params    
-    predictor_mode = 'Ideal' # 'predictor_on' # 'predictor_off'
+    predictor_mode = 'predictor_on' # 'predictor_on' # 'predictor_off'
     
     for GRAPH_MODE in ['random']:
         for trx_power_mode in ['equal']:
