@@ -114,7 +114,8 @@ class TestvsCompetitors:
 
                 # generate env
                 Gloval_env, env_configurations, flows_statistics = generate_env(**env_args,
-                                                                                HawkesParams=self.HawkesParams)
+                                                                                HawkesParams=self.HawkesParams,
+                                                                                )
 
                 # generate first decisions
 
@@ -254,13 +255,12 @@ class TestvsCompetitors:
 
         # average
         Episode_Avarge_data = {key: value / self.num_episodes for key, value in Episode_Avarge_data.items()}
+
         average_data_through_time = {key: value / self.num_episodes for key, value in average_data_through_time.items()}
         # separate rates, delays
         average_rates_through_time, average_delays_through_time = self.separate_rates_delays(average_data=average_data_through_time)
 
         print(f"==========================================================================================")
-        # print(
-        #     f"(V={num_nodes}, E={num_edges}, N={num_flows}, k={num_actions}) {[f'{c}: {data[c]:.3f}' for c in data]}")
 
         labels = self.algos
 
@@ -305,8 +305,7 @@ class TestvsCompetitors:
         '''
 
         # adding flow pkts according to arrivle statistics
-        if slot % self.pkt_arrival_sample_rate == 0 and slot != 0:
-        # if slot % self.pkt_arrival_sample_rate == 0:
+        if slot % self.pkt_arrival_sample_rate == 0:  # and slot != 0:
             for flow_statistic in flows_statistics:
                 entered_new_pkts = flow_statistic.step(slot=slot)
                 flow_name = flow_statistic.flow_name
@@ -446,7 +445,7 @@ if __name__ == "__main__":
     # general params
     num_nodes = 30  # 60
     num_edges = 50  # 90
-    num_actions = 4  # 15
+    num_actions = 15  # 15, 4
     temperature = 1.2
     num_episodes = 3
     episode_from = 7500  # 7501
@@ -458,27 +457,28 @@ if __name__ == "__main__":
     channel_gain = 1
     min_capacity = 200  # 200
     max_capacity = 500  # 500
-    min_flow_demand = 300   # 5, 500
-    max_flow_demand = 2000  # 200, 2000
+    min_flow_demand = 5   # 5, 500
+    max_flow_demand = 200  # 200, 2000
 
-    pkt_size = 100  # 500, 100
+    pkt_size = 500  # 500, 100
     units = 1e6
 
     slot_duration = 1
-    num_slots = 100  # 150
+    num_slots = 50  # 150
 
-    pkt_arrival_sample_rate = 5 # 5
+    pkt_arrival_sample_rate = 10  # 5
 
     # Hawkes parms
     HawkesParams = dict(
         lambda0=0.005,  # 0.9
         alpha=0.025,  # 0.5 0.4
         beta=0.0001,  # 0.7 0.8
-        history_num_slots=200, # 100
+        history_num_slots=200,  # 100
         allow_Hawkes_arrivals=True,
         elephent_flows_num=10,
-        mice_scaler=20,  # 0.1, 50, 150
-        elephent_scaler=50)  # 0.1, 100, 350
+        mice_scaler=5,  # 0.1, 50, 150, 20
+        elephent_scaler=5,
+        ManualAdded_Fixed_InitalPkts=100)  # 0.1, 100, 350, 50
 
     # predictor params
     predictor_mode = 'Ideal'  # 'predictor_on' # 'predictor_off'
@@ -493,9 +493,11 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            data_paths_list_for_all_flows = []
+            data_paths_list_for_all_flows = [
 
-            flows = [100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200] if GRAPH_MODE == 'random' else \
+                                             ]
+
+            flows = [60, 70, 80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
                     [40, 50, 60, 70, 80, 90, 100, 110, 120]
 
             for num_flows_idx, num_flows in enumerate(flows):
@@ -509,7 +511,7 @@ if __name__ == "__main__":
                                         pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units,
                                         HawkesParams=HawkesParams)
 
-                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=None,  # data_paths_list=data_paths_list_for_all_flows[num_flows_idx]
+                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=None,  # data_paths_list=data_paths_list_for_all_flows[num_flows_idx], None
                                                                                                             num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows,
                                                                                                             num_actions=num_actions,
                                                                                                             graph_mode=GRAPH_MODE,

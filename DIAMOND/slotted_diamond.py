@@ -187,11 +187,11 @@ class SLOTTED_DIAMOND:
                     flow['packets'] = (flow['packets'] - delivered_packets[idx_in_metrics_for_flow])  # my change, packets are ints
         
         # adding flow pkts according to arrivle PREDICTION
-        if (slot % self.pkt_arrival_sample_rate == 0) and slot != 0:
-        # if slot % self.pkt_arrival_sample_rate == 0:
+        if slot % self.pkt_arrival_sample_rate == 0:  # and slot != 0:
             if self.predictor_mode == 'Ideal':
                 for flow_statistic in self.flows_statistics:
-                    entered_new_pkts = flow_statistic.future_events[slot] * flow_statistic.type_scaler  # my change to match multiplication in .step() .flow_statistic.future_events[slot]
+                    # entered_new_pkts = flow_statistic.future_events[slot] * flow_statistic.type_scaler  # my change to match multiplication in .step() .flow_statistic.future_events[slot]
+                    entered_new_pkts = flow_statistic.step(slot)
                     flow_name = flow_statistic.flow_name
                     flow = get_flow_by_name(Global_flows, flow_name)
                     flow['packets'] += entered_new_pkts

@@ -27,7 +27,8 @@ def _get_random_flows_no_arrivals(num_nodes, num_flows, demands=[100], seed=1):
         result.append(f)
     return result
 
-def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration, num_slots, HawkesParams, seed=1):
+
+def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration, num_slots, pkt_arrival_sample_rate, HawkesParams, seed=1):
     """
     generates random flows
     :param num_nodes: number of nodes in the communication graph
@@ -48,51 +49,53 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
     for name in range(num_flows):
         src, dst = random.sample(range(num_nodes), 2)
 
-        # flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
-        #                                 lambda0=HawkesParams['lambda0'],
-        #                                 alpha=HawkesParams['alpha'],
-        #                                 beta=HawkesParams['beta'],
-        #
-        #                                 source=src,
-        #                                 destination=dst,
-        #                                 flow_name=name,
-        #                                 num_slots=num_slots,
-        #                                 slot_duration=slot_duration,
-        #                                 history_num_slots=HawkesParams['history_num_slots'],
-        #
-        #                                 type=random.choice(types),  #  type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice'
-        #                                 mice_scaler=HawkesParams['mice_scaler'],
-        #                                 elephent_scaler=HawkesParams['elephent_scaler'],
-        #
-        #                                 seed=seed)
-
-        f = {"source": src,
-             "destination": dst,
-             "packets": random.choice(demands), # flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name]
-             "name": name} # to be changes in the future to markov.state
-
-        flows.append(f)
-        # flows_statistics.append(flow_statistics)
-
-    for flow in flows:
         flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
                                         lambda0=HawkesParams['lambda0'],
                                         alpha=HawkesParams['alpha'],
                                         beta=HawkesParams['beta'],
 
-                                        source=flow["source"],
-                                        destination=flow["destination"],
-                                        flow_name=flow["name"],
+                                        source=src,
+                                        destination=dst,
+                                        flow_name=name,
                                         num_slots=num_slots,
                                         slot_duration=slot_duration,
                                         history_num_slots=HawkesParams['history_num_slots'],
+                                        pkt_arrival_sample_rate=pkt_arrival_sample_rate,
 
-                                        type=random.choice(types),  #  type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice'
+                                        type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice',  #  type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice, random.choice(types)
                                         mice_scaler=HawkesParams['mice_scaler'],
                                         elephent_scaler=HawkesParams['elephent_scaler'],
 
+                                        ManualAdded_Fixed_InitalPkts=HawkesParams['ManualAdded_Fixed_InitalPkts'],
                                         seed=seed)
+
+        f = {"source": src,
+             "destination": dst,
+             "packets": flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name], # flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name] ,random.choice(demands)
+             "name": name}  # to be changes in the future to markov.state
+
+        flows.append(f)
         flows_statistics.append(flow_statistics)
+
+    # for flow in flows:
+    #     flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
+    #                                     lambda0=HawkesParams['lambda0'],
+    #                                     alpha=HawkesParams['alpha'],
+    #                                     beta=HawkesParams['beta'],
+    #
+    #                                     source=flow["source"],
+    #                                     destination=flow["destination"],
+    #                                     flow_name=flow["name"],
+    #                                     num_slots=num_slots,
+    #                                     slot_duration=slot_duration,
+    #                                     history_num_slots=HawkesParams['history_num_slots'],
+    #
+    #                                     type=random.choice(types),  #  type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice'
+    #                                     mice_scaler=HawkesParams['mice_scaler'],
+    #                                     elephent_scaler=HawkesParams['elephent_scaler'],
+    #
+    #                                     seed=seed)
+    #     flows_statistics.append(flow_statistics)
 
     return flows, flows_statistics
 
@@ -160,7 +163,8 @@ def generate_env(num_nodes=10,
     packets = list(range(int(min_flow_demand), int(max_flow_demand) + delta, delta))
     # demands = [random.choice(packets) for _ in range(num_flows)]
     HawkesParams = kwargs.get('HawkesParams')
-    flows, flows_statistics = _get_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=num_flows, demands=packets, slot_duration=slot_duration, num_slots=num_slots, HawkesParams=HawkesParams,  seed=seed)
+    pkt_arrival_sample_rate = kwargs.get('pkt_arrival_sample_rate')
+    flows, flows_statistics = _get_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=num_flows, demands=packets, slot_duration=slot_duration, num_slots=num_slots, pkt_arrival_sample_rate=pkt_arrival_sample_rate, HawkesParams=HawkesParams,  seed=seed)
 
     # 3. generate env instance
     # capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=(num_nodes, num_nodes))
