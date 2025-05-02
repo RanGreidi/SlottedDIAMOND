@@ -1,0 +1,53 @@
+{
+    "os": "Windows-10-10.0.19041-SP0",
+    "python": "3.9.0",
+    "heartbeatAt": "2025-04-29T10:02:46.372921",
+    "startedAt": "2025-04-29T10:02:44.958700",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "C:\\Users\\beaviv\\DIAMOND_Slotted\\SlottedDIAMOND\\TraficPredictor_MAMBA\\src\\train.py",
+    "codePathLocal": "train.py",
+    "codePath": "TraficPredictor_MAMBA\\src\\train.py",
+    "git": {
+        "remote": "https://github.com/RanGreidi/SlottedDIAMOND.git",
+        "commit": "54fbed3c92d3c3d546c841c4ca5fca374d0c0b96"
+    },
+    "email": null,
+    "root": "C:/Users/beaviv/DIAMOND_Slotted/SlottedDIAMOND",
+    "host": "kc616-1",
+    "username": "beaviv",
+    "executable": "C:\\Users\\beaviv\\DIAMOND\\venv\\Scripts\\python.exe",
+    "cpu_count": 6,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 3696.0,
+        "min": 0.0,
+        "max": 3696.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3696.0,
+            "min": 0.0,
+            "max": 3696.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 926.6150741577148,
+            "used": 371.6946258544922
+        }
+    },
+    "gpu": "NVIDIA GeForce GTX 1080 Ti",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce GTX 1080 Ti",
+            "memory_total": 11811160064
+        }
+    ],
+    "memory": {
+        "total": 63.85584259033203
+    }
+}
