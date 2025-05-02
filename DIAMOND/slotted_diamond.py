@@ -5,6 +5,7 @@ from stage1_grrl import GRRL
 from stage2_nb3r import nb3r
 from environment import GraphEnvPower as GraphEnv
 from environment.utils import *
+from environment.FlowPrediction import FlowPrediction
 
 class SLOTTED_DIAMOND:
     def __init__(self,
@@ -38,6 +39,8 @@ class SLOTTED_DIAMOND:
         Actions = []
         all_slotted_paths = [[] for _ in range(self.num_slots)]
         self.flows_statistics = flows_statistics
+        if self.predictor_mode == 'predictor_on':
+            self.flows_predicted_statistics = self.predict_demand(flows_statistics)
 
         for slot in range(self.num_slots):  
 
@@ -197,7 +200,13 @@ class SLOTTED_DIAMOND:
                     flow['packets'] += entered_new_pkts
 
             if self.predictor_mode == 'predictor_on':
-                pass
+
+                for flow_predicted_statistic in self.flows_predicted_statistics:
+                    entered_new_pkts = flow_predicted_statistic.step(slot)
+                    flow_name = flow_predicted_statistic.flow_name
+                    flow = get_flow_by_name(Global_flows, flow_name)
+                    flow['packets'] += entered_new_pkts
+
             if self.predictor_mode == 'predictor_off':
                 pass
 
@@ -209,7 +218,18 @@ class SLOTTED_DIAMOND:
                 'SlotedDIAMOND_delay': 0,
                 'SlotedDIAMOND_rates': 0,
                 }
-    
+
+    def predict_demand(self, flows_statistics):
+
+        flows_predicted_statistics = []
+        for flow_statistics in flows_statistics:
+
+            flow_predicted_statistics = FlowPrediction(flow_statistics)
+
+            flows_predicted_statistics.append(flow_predicted_statistics)
+
+        return flows_predicted_statistics
+
     @staticmethod
     def rates_objective(env, actions):
         env.reset()

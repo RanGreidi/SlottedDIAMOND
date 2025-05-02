@@ -443,8 +443,8 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 30  # 60
-    num_edges = 50  # 90
+    num_nodes = 50  # 60
+    num_edges = 80  # 90
     num_actions = 15  # 15, 4
     temperature = 1.2
     num_episodes = 3
@@ -493,11 +493,21 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            data_paths_list_for_all_flows = [
+            data_paths_list_for_all_flows = [[],
+
+                                             [],
+
+                                             [],
+
+                                             [],
+
+                                             [],
+
+                                             []
 
                                              ]
 
-            flows = [60, 70, 80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
+            flows = [60, 70, 80, 90, 100, 110, 150, 200] if GRAPH_MODE == 'random' else \
                     [40, 50, 60, 70, 80, 90, 100, 110, 120]
 
             for num_flows_idx, num_flows in enumerate(flows):
@@ -511,7 +521,7 @@ if __name__ == "__main__":
                                         pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units,
                                         HawkesParams=HawkesParams)
 
-                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=None,  # data_paths_list=data_paths_list_for_all_flows[num_flows_idx], None
+                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=None,  # data_paths_list_for_all_flows[num_flows_idx], None
                                                                                                             num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows,
                                                                                                             num_actions=num_actions,
                                                                                                             graph_mode=GRAPH_MODE,
