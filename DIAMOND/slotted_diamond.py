@@ -1,11 +1,11 @@
 import numpy as np
 import os
 import copy
-from stage1_grrl import GRRL
-from stage2_nb3r import nb3r
-from environment import GraphEnvPower as GraphEnv
-from environment.utils import *
-from environment.FlowPrediction import FlowPrediction
+from DIAMOND.stage1_grrl import GRRL
+from DIAMOND.stage2_nb3r import nb3r
+from DIAMOND.environment import GraphEnvPower as GraphEnv
+from DIAMOND.environment.utils import *
+from DIAMOND.environment.FlowPrediction import FlowPrediction
 
 class SLOTTED_DIAMOND:
     def __init__(self,

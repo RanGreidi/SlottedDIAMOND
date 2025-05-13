@@ -6,7 +6,7 @@ import copy
 
 import tensorflow as tf
 
-from environment.data import generate_env
+# from DIAMOND.environment.data import generate_env
 from ga import GeneticAlgoritm
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)

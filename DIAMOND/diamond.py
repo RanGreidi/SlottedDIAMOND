@@ -1,8 +1,8 @@
 import numpy as np
 import os
 
-from stage1_grrl import GRRL
-from stage2_nb3r import nb3r
+from DIAMOND.stage1_grrl import GRRL
+from DIAMOND.stage2_nb3r import nb3r
 
 
 class DIAMOND:

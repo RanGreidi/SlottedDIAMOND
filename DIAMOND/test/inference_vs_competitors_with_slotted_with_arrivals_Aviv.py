@@ -8,16 +8,21 @@ import sys
 import pickle
 
 
-sys.path.insert(0, 'DIAMOND')
+# Go 2 levels up from this script to get project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, project_root)
+
+
+# sys.path.insert(0, 'DIAMOND')
 ##sys.path.insert(0, '/work_space/project2/DIAMOND-master/DIAMOND-master')
 
-from diamond import DIAMOND
-from plots.plot_results import plot_algorithm_metrics, plot_algorithm_mean_performance
-from slotted_diamond import SLOTTED_DIAMOND
-from environment import generate_env
+from DIAMOND.diamond import DIAMOND
+from DIAMOND.plots.plot_results import plot_algorithm_metrics, plot_algorithm_mean_performance
+from DIAMOND.slotted_diamond import SLOTTED_DIAMOND
+from DIAMOND.environment import generate_env
 from competitors import OSPF, RandomBaseline, DQN_GNN, DIAR, IACR
-from environment import GraphEnvPower as GraphEnv
-from environment.utils import *
+from DIAMOND.environment import GraphEnvPower as GraphEnv
+from DIAMOND.environment.utils import *
 
 SEED = 123
 random.seed(SEED)
@@ -234,7 +239,7 @@ class TestvsCompetitors:
                 file_path = os.path.join(subfolder_path, "Hawkes_params.json")
                 save_arguments_to_file(filename=file_path, args=self.HawkesParams)
 
-                Gloval_env.show_graph(save_path=os.path.join(subfolder_path, "graph.png"))
+                Gloval_env.show_graph(save_path=os.path.join(subfolder_path, "graph.png"), show_fig=False)
 
             if data_paths_list:
                 # Load the data from the pickle file
@@ -443,12 +448,12 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 50  # 60
-    num_edges = 80  # 90
+    num_nodes = 100  # 60
+    num_edges = 200  # 90
     num_actions = 15  # 15, 4
     temperature = 1.2
-    num_episodes = 3
-    episode_from = 7500  # 7501
+    num_episodes = 1  # 3
+    episode_from = 7502  # 7500  # 7501
     nb3r_steps = 100  # 1
 
     trx_power_mode = 'equal'
@@ -481,10 +486,10 @@ if __name__ == "__main__":
         ManualAdded_Fixed_InitalPkts=100)  # 0.1, 100, 350, 50
 
     # predictor params
-    predictor_mode = 'Ideal'  # 'predictor_on' # 'predictor_off'
+    predictor_mode = 'Ideal'  # 'predictor_on' # 'predictor_off', 'Ideal'
 
     for GRAPH_MODE in ['random']:
-        for trx_power_mode in ['equal']:
+        for trx_power_mode in ['equal']:  # 'equal'
 
             print("----------------------------")
             print(trx_power_mode, GRAPH_MODE)
@@ -493,21 +498,12 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            data_paths_list_for_all_flows = [[],
+            data_paths_list_for_all_flows = [
 
-                                             [],
-
-                                             [],
-
-                                             [],
-
-                                             [],
-
-                                             []
 
                                              ]
 
-            flows = [60, 70, 80, 90, 100, 110, 150, 200] if GRAPH_MODE == 'random' else \
+            flows = [80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
                     [40, 50, 60, 70, 80, 90, 100, 110, 120]
 
             for num_flows_idx, num_flows in enumerate(flows):

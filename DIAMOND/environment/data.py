@@ -1,9 +1,9 @@
 import random
 
-from environment import GraphEnvPower as GraphEnv
-from environment.utils import *
-from environment.Traffic_Probability_Model import Traffic_Probability_Model
-from environment.Traffic_Probability_HawkesModel import HawkesModel
+from DIAMOND.environment.graph_env_power import GraphEnvPower as GraphEnv
+from DIAMOND.environment.utils import *
+from DIAMOND.environment.Traffic_Probability_Model import Traffic_Probability_Model
+from DIAMOND.environment.Traffic_Probability_HawkesModel import HawkesModel
 
 
 def _get_random_flows_no_arrivals(num_nodes, num_flows, demands=[100], seed=1):

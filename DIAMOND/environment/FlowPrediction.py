@@ -3,21 +3,21 @@ import os
 
 # --------------------------------------------------------------------------------------- #
 # Step 1: Go up two levels from current file to reach the project root
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # Step 2: Add it to sys.path
-sys.path.append(project_root)
+# sys.path.append(project_root)
 # --------------------------------------------------------------------------------------- #
 
 import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
-# from TraficPredictor_MAMBA.src.model import TrafficRNN,TrafficLSTM,TrafficGRU,TrafficMamba
-# from torch.utils.data import Dataset, DataLoader
-# from TraficPredictor_MAMBA.src.train import HIDDEN_SIZE, OUTPUT_SEQUENCE_LENGTH, TEST_DIR, INPUT_SEQUENCE_LENGTH, DEVICE
-# from TraficPredictor_MAMBA.src.TrafficDataset import TrafficDataset
-# from TraficPredictor_MAMBA.src.utils import load_evaluated_checkpoint
+from TraficPredictor_MAMBA.src.model import TrafficRNN, TrafficLSTM, TrafficGRU, TrafficMamba
+from torch.utils.data import Dataset, DataLoader
+from TraficPredictor_MAMBA.src.train import HIDDEN_SIZE, OUTPUT_SEQUENCE_LENGTH, TEST_DIR, INPUT_SEQUENCE_LENGTH, DEVICE
+from TraficPredictor_MAMBA.src.TrafficDataset import TrafficDataset
+from TraficPredictor_MAMBA.src.utils import load_evaluated_checkpoint
 
 
 class FlowPrediction:
@@ -30,7 +30,7 @@ class FlowPrediction:
         # General
         self.pkt_arrival_sample_rate = flow_statistics.pkt_arrival_sample_rate
         self.type_scaler = flow_statistics.type_scaler        
-        self.MODEL_PATH = "TraficPredictor_MAMBA/checkpoints/best_model.pth"  # r'C:\Users\beaviv\DIAMOND_Slotted\SlottedDIAMOND\TraficPredictor_MAMBA\checkpoints\best_model.pth'
+        self.MODEL_PATH = r'/home/beaviv/traffic_mamba/checkpoints/best_model.pth'  # r'C:\Users\beaviv\DIAMOND_Slotted\SlottedDIAMOND\TraficPredictor_MAMBA\checkpoints\best_model.pth', "TraficPredictor_MAMBA/checkpoints/best_model.pth"
         self.True_future_count = flow_statistics.future_count
         self.True_future_evets = flow_statistics.future_events
 
@@ -54,7 +54,7 @@ class FlowPrediction:
     def predict_future_count(self):
         
         # Initialize model
-        model =  TrafficMamba(input_size=1, hidden_size=HIDDEN_SIZE, input_sequence_length=INPUT_SEQUENCE_LENGTH, output_size=OUTPUT_SEQUENCE_LENGTH).to(DEVICE)
+        model = TrafficMamba(input_size=1, hidden_size=HIDDEN_SIZE, input_sequence_length=INPUT_SEQUENCE_LENGTH, output_size=OUTPUT_SEQUENCE_LENGTH).to(DEVICE)
         load_evaluated_checkpoint(model, self.MODEL_PATH)
         model.eval()  # Set to evaluation mode
 

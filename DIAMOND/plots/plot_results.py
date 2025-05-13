@@ -2,7 +2,9 @@ import os.path
 
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from datetime import datetime
 import pickle
 
@@ -90,6 +92,7 @@ def plot_algorithm_metrics(data_dict, num_flows, seed, Gloval_env, graph_mode, s
     """
 
     base_path = r"C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_arrivals"
+    # base_path = r'/home/beaviv/DIAMOND-slotted_manual_Plots/with_arrivals'  # with_arrivals   # For claster
     base_path = os.path.join(base_path, f"{graph_mode}", f"{Gloval_env.kwargs['trx_power_mode']}")
     subfolder_name = f"{Gloval_env.num_nodes}_Nodes_{Gloval_env.num_edges // 2}_Edges"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Add timestamp
@@ -128,7 +131,7 @@ def plot_algorithm_metrics(data_dict, num_flows, seed, Gloval_env, graph_mode, s
     plt.tight_layout()
     if save_fig:
         plt.savefig(save_path)
-    plt.show()
+    # plt.show()
     # plt.close()
     return subfolder_path
 
@@ -200,7 +203,7 @@ def plot_algorithm_mean_performance(flows, algo_names, algo_rates, algo_delays, 
     if save_fig:
         plt.savefig(save_plot_path, dpi=300)
 
-    plt.show()
+    # plt.show()
 
     # Save data in Pickle format
     data_to_save = {
