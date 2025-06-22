@@ -3,10 +3,11 @@ import os.path
 import pandas as pd
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from datetime import datetime
 import pickle
+from DIAMOND.environment.utils import load_pickle_file
 
 # matplotlib.use('TkAgg')
 
@@ -80,7 +81,7 @@ def plot_all():
                     title='V30E50, rayleigh')
 
 
-def plot_algorithm_metrics(data_dict, num_flows, seed, Gloval_env, graph_mode, save_fig):
+def plot_algorithm_metrics(data_dict, Gloval_env, graph_mode, save_fig):
     """
     Plots three graphs for delay, rate, and active flows for different algorithms and saves the figure.
 
@@ -92,7 +93,7 @@ def plot_algorithm_metrics(data_dict, num_flows, seed, Gloval_env, graph_mode, s
     """
 
     base_path = r"C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_arrivals"
-    # base_path = r'/home/beaviv/DIAMOND-slotted_manual_Plots/with_arrivals'  # with_arrivals   # For claster
+    # base_path = r'/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction'  # with_arrivals   # For claster
     base_path = os.path.join(base_path, f"{graph_mode}", f"{Gloval_env.kwargs['trx_power_mode']}")
     subfolder_name = f"{Gloval_env.num_nodes}_Nodes_{Gloval_env.num_edges // 2}_Edges"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Add timestamp
@@ -136,7 +137,75 @@ def plot_algorithm_metrics(data_dict, num_flows, seed, Gloval_env, graph_mode, s
     return subfolder_path
 
 
-def plot_algorithm_mean_performance(flows, algo_names, algo_rates, algo_delays, subfolder_path, save_fig):
+def plot_algorithm_metrics_with_manual_addition(with_pred_folder, with_arrival_folder, save_fig=True):
+
+    # Loading data
+    with_pred_data_path = os.path.join(with_pred_folder, "data.pkl")
+    with_pred_data = load_pickle_file(with_pred_data_path)
+
+    with_arrival_data_path = os.path.join(with_arrival_folder, "data.pkl")
+    with_arrival_data = load_pickle_file(with_arrival_data_path)
+
+    # ------------------ Add Manually with_arrival SlottedDIAMOND data to with_prediction data ----------- #
+
+    # Add Ideal case to data_dict
+    with_pred_data['SlottedDIAMOND_Ideal_delay'] = with_arrival_data['SlotedDIAMOND_delay']
+    with_pred_data['SlottedDIAMOND_Ideal_rates'] = with_arrival_data['SlotedDIAMOND_rates']
+    with_pred_data['SlottedDIAMOND_Ideal_active_flows'] = with_arrival_data['SlotedDIAMOND_active_flows']
+
+    # change name in data dict
+    with_pred_data['SlottedDIAMOND_prediction_delay'] = with_pred_data['SlotedDIAMOND_delay']
+    with_pred_data['SlottedDIAMOND_prediction_rates'] = with_pred_data['SlotedDIAMOND_rates']
+    with_pred_data['SlottedDIAMOND_prediction_active_flows'] = with_pred_data['SlotedDIAMOND_active_flows']
+
+    # remove incorrect name from data
+    del with_pred_data['SlotedDIAMOND_delay']
+    del with_pred_data['SlotedDIAMOND_rates']
+    del with_pred_data['SlotedDIAMOND_active_flows']
+
+    # ---------------------------------------------------------------------------------------------------- #
+
+    save_data_path_pickle = os.path.join(with_pred_folder, "data_with_addition.pkl")  # Save as Pickle
+    # Save data_dict as Pickle (optional)
+    with open(save_data_path_pickle, "wb") as pickle_file:
+        pickle.dump(with_pred_data, pickle_file)
+
+    save_path = os.path.join(with_pred_folder, "Metrics_Plots_after_change.png")
+
+    # save_path = f"metrics_{num_flows}flows_{seed}seed.png"
+    algorithms = ['SlottedDIAMOND_prediction', 'SlottedDIAMOND_Ideal', 'DIAMOND', 'GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
+    metrics = ['delay', 'rates', 'active_flows']
+
+    # Create subplots
+    fig, axes = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
+
+    colors = plt.cm.get_cmap("tab10", len(algorithms))  # Use a colormap for distinct colors
+
+    for idx, metric in enumerate(metrics):
+        ax = axes[idx]
+        for i, algo in enumerate(algorithms):
+            key = f"{algo}_{metric}"
+            if key in with_pred_data:
+                if i == 1:
+                    # Just for SlottedDIAMOND_Ideal
+                    ax.plot(with_pred_data[key], label=algo, color=colors(i-1), linestyle='--', alpha=0.8)
+                else:
+                    ax.plot(with_pred_data[key], label=algo, color=colors(i), alpha=0.8)
+
+        ax.set_title(metric.replace('_', ' ').capitalize())
+        ax.set_ylabel(metric.capitalize())
+        ax.legend()
+        ax.grid(True, linestyle='--', alpha=0.6)
+
+    axes[-1].set_xlabel("Time Steps")
+    plt.tight_layout()
+    if save_fig:
+        plt.savefig(save_path)
+
+
+
+
+def plot_algorithm_mean_performance(num_episodes, flows, algo_names, algo_rates, algo_delays, subfolder_path, save_fig):
     """
     Plots rates and delays of multiple algorithms against flow numbers in subplots.
 
@@ -149,7 +218,7 @@ def plot_algorithm_mean_performance(flows, algo_names, algo_rates, algo_delays, 
     """
 
     # File paths for saving data
-    save_plot_path = os.path.join(subfolder_path, 'algorithm_performance_rates_delays.png')
+    save_plot_path = os.path.join(subfolder_path, f'algorithm_performance_rates_delays_{num_episodes}.png')
     save_data_path_pickle = os.path.join(subfolder_path, "performance_data.pkl")  # Save as Pickle
 
     fig, axes = plt.subplots(1, 2, figsize=(15, 5))  # Create two subplots side by side
@@ -216,7 +285,119 @@ def plot_algorithm_mean_performance(flows, algo_names, algo_rates, algo_delays, 
     with open(save_data_path_pickle, "wb") as pickle_file:
         pickle.dump(data_to_save, pickle_file)
 
+
+def plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_arrival_folder, num_episodes=3, save_fig=True):
+
+    #  ----------------- Loading data -------------------------------- #
+    with_pred_data_path = os.path.join(with_pred_folder, "performance_data.pkl")
+    with_pred_data = load_pickle_file(with_pred_data_path)
+
+    with_arrival_data_path = os.path.join(with_arrival_folder, "performance_data.pkl")
+    with_arrival_data = load_pickle_file(with_arrival_data_path)
+
+    # ----------------------------------------------------------------- #
+    # with pred data
+    flows = with_pred_data['flows']
+    algo_names = with_pred_data['algo_names']
+    algo_rates = with_pred_data['algo_rates']
+    algo_delays = with_pred_data['algo_delays']
+
+    algo_names[0] = 'SlottedDIAMOND_Prediction'
+    algo_names.insert(1, 'SlottedDIAMOND_Ideal')
+
+    # ---------------- Add Manually with_arrival SlottedDIAMOND data to with_prediction data ----------- #
+    for num_flows_index in range(len(flows)):
+        algo_rates[num_flows_index].insert(1, with_arrival_data['algo_rates'][num_flows_index][0])  # TODO: in algo_rates[num_flows_index]. [0] represents the results for slotted_diamond
+        algo_delays[num_flows_index].insert(1, with_arrival_data['algo_delays'][num_flows_index][0])
+
+    # ---------------------------------------------------------------------------------------------------- #
+
+
+    # File paths for saving data
+    save_plot_path = os.path.join(with_pred_folder, f'algorithm_performance_rates_delays_{num_episodes}_after_change.png')
+    save_data_path_pickle = os.path.join(with_pred_folder, "performance_data_after_change.pkl")  # Save as Pickle
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))  # Create two subplots side by side
+
+    # Define unique colors and markers
+    colors = ['b', 'b', 'r', 'darkviolet', 'orange', 'green', 'violet', 'k', 'y']
+    markers = ['o', 'o', 'p', '+', '*', '^', '+', 'p', 'v']
+
+    # 📌 **Plot Algorithm Rates**
+    ax1 = axes[0]  # First subplot for rates
+    for idx, algo_name in enumerate(algo_names):
+        color = colors[idx % len(colors)]
+        marker = markers[idx % len(markers)]
+        rates = [algo_rates[i][idx] for i in range(len(flows))]
+
+        if algo_name == 'SlottedDIAMOND_Ideal':
+            ax1.plot(flows, rates, linestyle='--', color=color, marker=marker, markersize=8,
+                     markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+        else:
+            ax1.plot(flows, rates, linestyle='-', color=color, marker=marker, markersize=8,
+                     markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+    ax1.set_xticks(flows)
+    ax1.set_xticklabels(flows, fontsize=10)
+    ax1.set_xlabel("Number of Flows", fontsize=12)
+    ax1.set_ylabel("Avg. Flow Rate [Mbps]", fontsize=12)
+    ax1.set_title("Algorithm Performance: Rates vs Flows", fontsize=14)
+    ax1.legend(loc='best', fontsize=10)
+    ax1.grid(True, linestyle='--', linewidth=0.5)
+
+    # 📌 **Plot Algorithm Delays**
+    ax2 = axes[1]  # Second subplot for delays
+    for idx, algo_name in enumerate(algo_names):
+        color = colors[idx % len(colors)]
+        marker = markers[idx % len(markers)]
+        delays = [algo_delays[i][idx] for i in range(len(flows))]
+
+        if algo_name == 'SlottedDIAMOND_Ideal':
+            ax2.plot(flows, delays, linestyle='--', color=color, marker=marker, markersize=8,
+                 markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+        else:
+            ax2.plot(flows, delays, linestyle='-', color=color, marker=marker, markersize=8,
+                     markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+    ax2.set_xticks(flows)
+    ax2.set_xticklabels(flows, fontsize=10)
+    ax2.set_xlabel("Number of Flows", fontsize=12)
+    ax2.set_ylabel("Avg. Flow Delays [s]", fontsize=12)
+    ax2.set_title("Algorithm Performance: Delays vs Flows", fontsize=14)
+    ax2.legend(loc='best', fontsize=10)
+    ax2.grid(True, linestyle='--', linewidth=0.5)
+
+    # Adjust layout for better spacing
+    plt.tight_layout()
+
+    # Save and show the plot
+    # Ensure the directory exists
+    # os.makedirs(subfolder_path, exist_ok=True)
+    if save_fig:
+        plt.savefig(save_plot_path, dpi=300)
+
+    # plt.show()
+
+    # Save data in Pickle format
+    data_to_save = {
+        "flows": flows,
+        "algo_names": algo_names,
+        "algo_rates": algo_rates,
+        "algo_delays": algo_delays
+    }
+    # Save data in Pickle format (for faster loading in Python)
+    with open(save_data_path_pickle, "wb") as pickle_file:
+        pickle.dump(data_to_save, pickle_file)
+
+
 if __name__ == "__main__":
 
-    plot_all()
-    print('ok')
+    with_pred_folder = r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250619_050305_120_Flows'
+
+    with_arrival_folder = r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_arrivals\random\equal\50_Nodes_80_Edges\20250619_223257_120_Flows'
+
+    plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_arrival_folder)
+
+    print(f'finished')

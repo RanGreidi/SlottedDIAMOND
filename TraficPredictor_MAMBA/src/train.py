@@ -28,7 +28,7 @@ EPOCHS = 10000
 HIDDEN_SIZE = 256
 LEARNING_RATE = 0.001
 WANDB_TRACKING = True
-model_name = "LSTM"
+model_name = "Mamba"
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

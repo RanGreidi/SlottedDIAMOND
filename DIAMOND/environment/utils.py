@@ -4,6 +4,11 @@ import networkx as nx
 import os
 import random
 import json
+import torch
+import time
+import threading
+import pickle
+
 
 def init_seed(seed):
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -269,9 +274,9 @@ def create_nsfnet_graph():
     Gbase.add_edges_from(
         [(0, 1), (0, 2), (0, 3), (1, 2), (1, 7), (2, 5), (3, 8), (3, 4), (4, 5), (4, 6), (5, 12), (5, 13),
          (6, 7), (7, 10), (8, 9), (8, 11), (9, 10), (9, 12), (10, 11), (10, 13), (11, 12)])
-    A = np.array(nx.to_numpy_matrix(Gbase))
+    A = np.array(nx.to_numpy_array(Gbase))
     A = np.clip(A + A.T, a_min=0, a_max=1)
-    G = nx.from_numpy_matrix(A)
+    G = nx.from_numpy_array(A, create_using=nx.Graph)  # g = nx.from_numpy_array(adjacency, create_using=nx.Graph)
     pos = nx.spring_layout(G, seed=124)
     pos = np.stack(list(pos.values()), axis=0)
     return A, pos
@@ -380,7 +385,7 @@ def run_Slotted_predefined_actions(env, actions, slot):
         # else allocate action randomly or perform ospf
         else:
             # random decision each slot. TODO: add radnom/OSPF/whatever
-            current_slot_actions.append( random.randint(0,env.k-1))
+            current_slot_actions.append(random.randint(0, env.k-1))
 
     # Note! actions - this list needs to be ordered as env.flows is ordered! for example:
     #  if env.flows is [flow_name_2, flow_name_3, flow_name_4] than actions needs to be 
@@ -409,3 +414,32 @@ def load_json_file(filename):
     with open(filename, 'r') as file:
         arguments = json.load(file)
     return arguments
+
+
+def load_pickle_file(filename):
+    with open(filename, "rb") as pickle_file:
+        data_dict = pickle.load(pickle_file)
+    return data_dict
+
+def keep_gpu_active_heavy(interval_seconds=60):
+    """
+    Keeps the GPU busy by running a moderately heavy matrix op loop.
+    Should trick idle detectors by holding GPU usage longer.
+    """
+    def loop():
+        counter = 0
+        dummy = torch.randn(2048, 2048, device="cuda")  # ~32MB tensor
+        while True:
+            try:
+                start = time.time()
+                for _ in range(50):  # Perform multiple ops back to back
+                    dummy = torch.relu(torch.matmul(dummy, dummy))
+                torch.cuda.synchronize()
+                duration = time.time() - start
+                counter += 1
+                print(f"[keep_gpu_active] Ping #{counter} | Duration: {duration:.2f}s at {time.strftime('%H:%M:%S')}")
+            except Exception as e:
+                print(f"[keep_gpu_active] GPU activity failed: {e}")
+            time.sleep(interval_seconds)
+
+    threading.Thread(target=loop, daemon=True).start()

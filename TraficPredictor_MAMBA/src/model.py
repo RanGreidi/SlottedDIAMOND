@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-# from mamba_ssm import Mamba # pip install mamba-ssm==1.2.0.post1
+from mamba_ssm import Mamba # pip install mamba-ssm==1.2.0.post1
 
 class TrafficLSTM(nn.Module):
     """

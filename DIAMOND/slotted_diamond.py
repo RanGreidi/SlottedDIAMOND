@@ -5,7 +5,7 @@ from DIAMOND.stage1_grrl import GRRL
 from DIAMOND.stage2_nb3r import nb3r
 from DIAMOND.environment import GraphEnvPower as GraphEnv
 from DIAMOND.environment.utils import *
-from DIAMOND.environment.FlowPrediction import FlowPrediction
+# from DIAMOND.environment.FlowPrediction import FlowPrediction
 
 class SLOTTED_DIAMOND:
     def __init__(self,
@@ -37,7 +37,7 @@ class SLOTTED_DIAMOND:
         Global_flows = Gloval_env.flows
         full_run_data = []
         Actions = []
-        all_slotted_paths = [[] for _ in range(self.num_slots)]
+        all_slotted_paths = []
         self.flows_statistics = flows_statistics
         if self.predictor_mode == 'predictor_on':
             self.flows_predicted_statistics = self.predict_demand(flows_statistics)
@@ -66,7 +66,7 @@ class SLOTTED_DIAMOND:
             # Run SLotted DIAMOND
             if step_env.flows:
                 slot_paths, _, _, slot_action = self.run_slot(step_env, grrl_data=grrl_data)
-                all_slotted_paths[slot].append(slot_paths)
+                all_slotted_paths.append(slot_paths)
                 SlotedDIAMOND_delay_data = step_env.get_delay_data()
                 SlotedDIAMOND_rates_data = step_env.get_rates_data()
                 slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in step_env.flows]
@@ -87,7 +87,7 @@ class SLOTTED_DIAMOND:
 
             print(f"Finished slot {slot + 1}/{self.num_slots} In initial Slotted_DIAMOND \n")
 
-        return full_run_data, Actions
+        return full_run_data, Actions, all_slotted_paths
 
     def run_slot(self, env, grrl_data=False):
         # stage 1

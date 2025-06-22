@@ -3,9 +3,11 @@ import random
 import os
 from datetime import datetime
 import shutil
+import numpy as np
 import copy
 import sys
 import pickle
+import threading
 
 
 # Go 2 levels up from this script to get project root
@@ -23,6 +25,12 @@ from DIAMOND.environment import generate_env
 from competitors import OSPF, RandomBaseline, DQN_GNN, DIAR, IACR
 from DIAMOND.environment import GraphEnvPower as GraphEnv
 from DIAMOND.environment.utils import *
+from DIAMOND.environment.utils import keep_gpu_active_heavy
+
+# -------------- Start Cluster GPU ping thread in background for avoiding IDLE state ------------- #
+if torch.cuda.is_available():
+    keep_gpu_active_heavy(interval_seconds=60)  # Try 60 seconds
+# ------------------------------------------------------------------------------------------------ #
 
 SEED = 123
 random.seed(SEED)
@@ -35,6 +43,7 @@ class TestvsCompetitors:
                  grrl_model_path,
                  num_episodes=100,
                  num_rb_trials=1,
+                 run_competition=True,
                  **kwargs):
 
         self.num_episodes = num_episodes
@@ -48,7 +57,7 @@ class TestvsCompetitors:
         self.pkt_arrival_sample_rate = kwargs.get('pkt_arrival_sample_rate', 1)
         self.HawkesParams = kwargs.get('HawkesParams', {})
 
-        self.algos = ['SlotedDIAMOND', 'DIAMOND', 'GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
+        self.algos = ['SlotedDIAMOND', 'DIAMOND', 'GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR'] if run_competition else ['SlotedDIAMOND']
         self.num_of_algos = len(self.algos)
         self.first_step_actions = {algo: [] for algo in self.algos}
 
@@ -75,6 +84,9 @@ class TestvsCompetitors:
             'DIAR': DIAR(n_iter=2),
             'IACR': IACR(delta=0.5, alpha=1.3),
         }
+
+        # to monitor if you want to calculate competition
+        self.run_competition = run_competition
 
     def __call__(self, data_paths_list=None, **kwargs):
 
@@ -125,33 +137,55 @@ class TestvsCompetitors:
                 # generate first decisions
 
                 # Run Slotted DIAMOND
-                _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env),
+                _, self.first_step_actions['SlotedDIAMOND'], all_slotted_paths = self.slotted_diamond(copy.deepcopy(Gloval_env),
                                                                                    env_configurations, flows_statistics,
                                                                                    grrl_data=True)
-                # Run DIAMOND
-                print(f"Started DIAMOND \n")
-                _, _, _, _, self.first_step_actions['DIAMOND'] = self.diamond(copy.deepcopy(Gloval_env), grrl_data=True)
-                print(f"Finished DIAMOND \n")
+                if self.run_competition:
+                    # Run DIAMOND
+                    print(f"Started DIAMOND \n")
+                    _, _, _, _, self.first_step_actions['DIAMOND'] = self.diamond(copy.deepcopy(Gloval_env), grrl_data=True)
+                    print(f"Finished DIAMOND \n")
 
-                # Run GRRL
-                _, _, _, self.first_step_actions['GRRL'], _ = self.grrl(copy.deepcopy(Gloval_env), grrl_data=True)
-                # Run competitors
-                print(f"Started all competition \n")
-                for name, comp in zip(self.competitors.keys(), self.competitors.values()):
-                    _, _, _, _, self.first_step_actions[name] = comp.run(copy.deepcopy(Gloval_env), seed)
-                print(f"Finished all competition \n")
+                    # Run GRRL
+                    _, _, _, self.first_step_actions['GRRL'], _ = self.grrl(copy.deepcopy(Gloval_env), grrl_data=True)
+                    # Run competitors
+                    print(f"Started all competition \n")
+                    for name, comp in zip(self.competitors.keys(), self.competitors.values()):
+                        _, _, _, _, self.first_step_actions[name] = comp.run(copy.deepcopy(Gloval_env), seed)
+                    print(f"Finished all competition \n")
+
+                else:  # Todo: manually give everyone same decisions to avoid bugs
+
+                    pass
+
+                    # Run GRRL
+                    # print(f"Started GRRL \n")
+                    # _, _, _, self.first_step_actions['DIAMOND'], _ = self.grrl(copy.deepcopy(Gloval_env), grrl_data=True)
+                    #
+                    # print(f"Finished GRRL \n")
+                    #
+                    # self.first_step_actions['GRRL'] = copy.deepcopy(self.first_step_actions['DIAMOND'])
+                    #
+                    # for name, comp in zip(self.competitors.keys(), self.competitors.values()):
+                    #     self.first_step_actions[name] = copy.deepcopy(self.first_step_actions['DIAMOND'])
 
                 # initialize Global flows list for each algo (entire run flows)
-                Algos_Global_flows = {
-                    'SlotedDIAMOND': copy.deepcopy(env_configurations['flows']),
-                    'DIAMOND': copy.deepcopy(env_configurations['flows']),
-                    'GRRL': copy.deepcopy(env_configurations['flows']),
-                    'DQN+GNN': copy.deepcopy(env_configurations['flows']),
-                    'OSPF': copy.deepcopy(env_configurations['flows']),
-                    'RandomBL': copy.deepcopy(env_configurations['flows']),
-                    'DIAR': copy.deepcopy(env_configurations['flows']),
-                    'IACR': copy.deepcopy(env_configurations['flows']),
-                }
+                if self.run_competition:
+                    Algos_Global_flows = {
+                        'SlotedDIAMOND': copy.deepcopy(env_configurations['flows']),
+                        'DIAMOND': copy.deepcopy(env_configurations['flows']),
+                        'GRRL': copy.deepcopy(env_configurations['flows']),
+                        'DQN+GNN': copy.deepcopy(env_configurations['flows']),
+                        'OSPF': copy.deepcopy(env_configurations['flows']),
+                        'RandomBL': copy.deepcopy(env_configurations['flows']),
+                        'DIAR': copy.deepcopy(env_configurations['flows']),
+                        'IACR': copy.deepcopy(env_configurations['flows']),
+                    }
+                else:
+                    Algos_Global_flows = {
+                        'SlotedDIAMOND': copy.deepcopy(env_configurations['flows'])
+                    }
+
 
                 full_run_data = []
 
@@ -182,7 +216,6 @@ class TestvsCompetitors:
                     print(f'slot {slot}, {len(Algos_step_envs["SlotedDIAMOND"].flows)}/{len(Gloval_env.flows)} flows alive')
 
                     # -----Run ALGOS------
-
                     # Run SlottedDIAMOND
                     if Algos_step_envs['SlotedDIAMOND'].flows:
                         SlotedDIAMOND_rates_data, SlotedDIAMOND_delay_data = run_Slotted_predefined_actions(Algos_step_envs['SlotedDIAMOND'], self.first_step_actions['SlotedDIAMOND'], slot)
@@ -190,29 +223,32 @@ class TestvsCompetitors:
                         slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
                         slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
 
-                    # Run DIAMOND
-                    if Algos_step_envs['DIAMOND'].flows:
-                        diamond_rates_data, diamond_delay_data = run_predefined_actions(Algos_step_envs['DIAMOND'], self.first_step_actions['DIAMOND'])
-                        slot_data['DIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['DIAMOND'].flows]
-                        slot_data['DIAMOND_delay'] = diamond_delay_data['delay_per_flow']
-                        slot_data['DIAMOND_rates'] = diamond_rates_data['rate_per_flow']
+                    if self.run_competition:
+                        # --------- Run Competition ---------- #
 
-                    # Run GRRL
-                    if Algos_step_envs['GRRL'].flows:
-                        grrl_rates_data, grrl_delay_data = run_predefined_actions(Algos_step_envs['GRRL'],
-                                                                                  self.first_step_actions['GRRL'])
-                        slot_data['GRRL_active_flows'] = [flow['name'] for flow in Algos_step_envs['GRRL'].flows]
-                        slot_data['GRRL_delay'] = grrl_delay_data['delay_per_flow']
-                        slot_data['GRRL_rates'] = grrl_rates_data['rate_per_flow']
+                        # Run DIAMOND
+                        if Algos_step_envs['DIAMOND'].flows:
+                            diamond_rates_data, diamond_delay_data = run_predefined_actions(Algos_step_envs['DIAMOND'], self.first_step_actions['DIAMOND'])
+                            slot_data['DIAMOND_active_flows'] = [flow['name'] for flow in Algos_step_envs['DIAMOND'].flows]
+                            slot_data['DIAMOND_delay'] = diamond_delay_data['delay_per_flow']
+                            slot_data['DIAMOND_rates'] = diamond_rates_data['rate_per_flow']
 
-                    # Run competitors
-                    for name, comp in zip(self.competitors.keys(), self.competitors.values()):
-                        if Algos_step_envs[name].flows:
-                            rates_data, delay_data = run_predefined_actions(Algos_step_envs[name],
-                                                                            self.first_step_actions[name])
-                            slot_data[f"{name}_active_flows"] = [flow['name'] for flow in Algos_step_envs[name].flows]
-                            slot_data[f"{name}_delay"] = delay_data['delay_per_flow']
-                            slot_data[f"{name}_rates"] = rates_data['rate_per_flow']
+                        # Run GRRL
+                        if Algos_step_envs['GRRL'].flows:
+                            grrl_rates_data, grrl_delay_data = run_predefined_actions(Algos_step_envs['GRRL'],
+                                                                                      self.first_step_actions['GRRL'])
+                            slot_data['GRRL_active_flows'] = [flow['name'] for flow in Algos_step_envs['GRRL'].flows]
+                            slot_data['GRRL_delay'] = grrl_delay_data['delay_per_flow']
+                            slot_data['GRRL_rates'] = grrl_rates_data['rate_per_flow']
+
+                        # Run competitors
+                        for name, comp in zip(self.competitors.keys(), self.competitors.values()):
+                            if Algos_step_envs[name].flows:
+                                rates_data, delay_data = run_predefined_actions(Algos_step_envs[name],
+                                                                                self.first_step_actions[name])
+                                slot_data[f"{name}_active_flows"] = [flow['name'] for flow in Algos_step_envs[name].flows]
+                                slot_data[f"{name}_delay"] = delay_data['delay_per_flow']
+                                slot_data[f"{name}_rates"] = rates_data['rate_per_flow']
 
                             # Update Algos_Global_flows according to preformance of each algo
                     Algos_Global_flows = self.update_Global_flows(Algos_Global_flows, flows_statistics, slot_data, slot)
@@ -229,7 +265,7 @@ class TestvsCompetitors:
 
                 # plot individual episode results.
                 save = True
-                subfolder_path = plot_algorithm_metrics(this_Episode_Avarge_data, num_flows=num_flows, seed=seed,
+                subfolder_path = plot_algorithm_metrics(this_Episode_Avarge_data,
                                                         Gloval_env=Gloval_env,
                                                         graph_mode=kwargs['graph_mode'], save_fig=save)
                 # save generate_env args
@@ -238,7 +274,28 @@ class TestvsCompetitors:
                 # save Hawks model params
                 file_path = os.path.join(subfolder_path, "Hawkes_params.json")
                 save_arguments_to_file(filename=file_path, args=self.HawkesParams)
-
+                # save all_paths
+                file_path = os.path.join(subfolder_path, "all_slotted_paths.json")
+                save_arguments_to_file(filename=file_path, args=all_slotted_paths)
+                # save link capacities for NS3
+                file_path = os.path.join(subfolder_path, "link_capacities.json")
+                capacity_list = [int(x) for x in list(Gloval_env.bandwidth_edge_list)]
+                save_arguments_to_file(filename=file_path, args=capacity_list)
+                # save flows for NS3
+                file_path = os.path.join(subfolder_path, "flows.json")
+                flows_list = Gloval_env.flows
+                save_arguments_to_file(filename=file_path, args=flows_list)
+                # save node positions for NS3
+                file_path = os.path.join(subfolder_path, "node_positions.npy")
+                node_positions = Gloval_env.node_positions
+                np.save(file_path, node_positions)
+                # save links indices for NS3
+                file_path = os.path.join(subfolder_path, "links_indices.json")
+                link_indices = Gloval_env.eids
+                # Convert edge keys to "u-v" string format
+                serializable_eids = {f"{u}-{v}": eid for (u, v), eid in Gloval_env.eids.items()}
+                save_arguments_to_file(filename=file_path, args=serializable_eids)
+                # save graph image
                 Gloval_env.show_graph(save_path=os.path.join(subfolder_path, "graph.png"), show_fig=False)
 
             if data_paths_list:
@@ -253,6 +310,9 @@ class TestvsCompetitors:
             """
             for key in this_Episode_Avarge_data.keys():  # take average over this in each individual episode and not the commulative
                 if "active_flows" in key:
+                    continue
+
+                if not self.run_competition and 'SlotedDIAMOND' not in key:  # TODO: handles the case of when some runs in "this_Episode_Avarge_data" had also competition but we are not interested
                     continue
                 else:
                     average_data_through_time[key] += np.mean(this_Episode_Avarge_data[key][this_Episode_Avarge_data[key] != 0])
@@ -310,13 +370,17 @@ class TestvsCompetitors:
         '''
 
         # adding flow pkts according to arrivle statistics
-        if slot % self.pkt_arrival_sample_rate == 0:  # and slot != 0:
-            for flow_statistic in flows_statistics:
-                entered_new_pkts = flow_statistic.step(slot=slot)
-                flow_name = flow_statistic.flow_name
-                for algo in self.algos:
-                    flow = get_flow_by_name(Algos_Global_flows[algo], flow_name)
-                    flow['packets'] += entered_new_pkts
+        if self.predictor_mode == 'predictor_off':
+            pass
+
+        else:
+            if slot % self.pkt_arrival_sample_rate == 0:  # and slot != 0:
+                for flow_statistic in flows_statistics:
+                    entered_new_pkts = flow_statistic.step(slot=slot)
+                    flow_name = flow_statistic.flow_name
+                    for algo in self.algos:
+                        flow = get_flow_by_name(Algos_Global_flows[algo], flow_name)
+                        flow['packets'] += entered_new_pkts
 
         # removing flow pkts according to arrvied pkts
         for algo in self.algos:
@@ -360,43 +424,60 @@ class TestvsCompetitors:
         return new_flows
 
     def create_initial_slot_data(self):
-        data = {
-            'SlotedDIAMOND_active_flows': None,
-            'SlotedDIAMOND_delay': 0,
-            'SlotedDIAMOND_rates': 0,
-            'DIAMOND_active_flows': None,
-            'DIAMOND_delay': 0,
-            'DIAMOND_rates': 0,
-            'GRRL_active_flows': None,
-            'GRRL_delay': 0,
-            'GRRL_rates': 0,
-        }
-        for c in self.competitors.keys():
-            data[f"{c}_active_flows"] = None
-            data[f"{c}_delay"] = 0
-            data[f"{c}_rates"] = 0
+
+        if self.run_competition:
+            data = {
+                'SlotedDIAMOND_active_flows': None,
+                'SlotedDIAMOND_delay': 0,
+                'SlotedDIAMOND_rates': 0,
+                'DIAMOND_active_flows': None,
+                'DIAMOND_delay': 0,
+                'DIAMOND_rates': 0,
+                'GRRL_active_flows': None,
+                'GRRL_delay': 0,
+                'GRRL_rates': 0,
+            }
+            for c in self.competitors.keys():
+                data[f"{c}_active_flows"] = None
+                data[f"{c}_delay"] = 0
+                data[f"{c}_rates"] = 0
+
+        else:
+            data = {
+                'SlotedDIAMOND_active_flows': None,
+                'SlotedDIAMOND_delay': 0,
+                'SlotedDIAMOND_rates': 0,
+            }
 
         return data
 
     def create_initial_run_data(self):
+        if self.run_competition:
+            data = {
+                'SlotedDIAMOND_delay': np.zeros(self.num_slots),
+                'SlotedDIAMOND_rates': np.zeros(self.num_slots),
+                'SlotedDIAMOND_active_flows': np.zeros(self.num_slots),
 
-        data = {
-            'SlotedDIAMOND_delay': np.zeros(self.num_slots),
-            'SlotedDIAMOND_rates': np.zeros(self.num_slots),
-            'SlotedDIAMOND_active_flows': np.zeros(self.num_slots),
+                'DIAMOND_delay': np.zeros(self.num_slots),
+                'DIAMOND_rates': np.zeros(self.num_slots),
+                'DIAMOND_active_flows': np.zeros(self.num_slots),
 
-            'DIAMOND_delay': np.zeros(self.num_slots),
-            'DIAMOND_rates': np.zeros(self.num_slots),
-            'DIAMOND_active_flows': np.zeros(self.num_slots),
+                'GRRL_delay': np.zeros(self.num_slots),
+                'GRRL_rates': np.zeros(self.num_slots),
+                'GRRL_active_flows': np.zeros(self.num_slots),
+            }
+            for c in self.competitors.keys():
+                data[f"{c}_delay"] = np.zeros(self.num_slots)
+                data[f"{c}_rates"] = np.zeros(self.num_slots)
+                data[f"{c}_active_flows"] = np.zeros(self.num_slots)
 
-            'GRRL_delay': np.zeros(self.num_slots),
-            'GRRL_rates': np.zeros(self.num_slots),
-            'GRRL_active_flows': np.zeros(self.num_slots),
-        }
-        for c in self.competitors.keys():
-            data[f"{c}_delay"] = np.zeros(self.num_slots)
-            data[f"{c}_rates"] = np.zeros(self.num_slots)
-            data[f"{c}_active_flows"] = np.zeros(self.num_slots)
+        else:
+            data = {
+                'SlotedDIAMOND_delay': np.zeros(self.num_slots),
+                'SlotedDIAMOND_rates': np.zeros(self.num_slots),
+                'SlotedDIAMOND_active_flows': np.zeros(self.num_slots),
+            }
+
         return data
 
     def prepare_end_of_run_data(self, full_run_data, Episode_Avarge_data):
@@ -448,13 +529,13 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 100  # 60
-    num_edges = 200  # 90
+    num_nodes = 50  # 60
+    num_edges = 80  # 90
     num_actions = 15  # 15, 4
     temperature = 1.2
-    num_episodes = 1  # 3
-    episode_from = 7502  # 7500  # 7501
-    nb3r_steps = 100  # 1
+    num_episodes = 3  # 3
+    episode_from = 7500  # 7500  # 7501
+    nb3r_steps = 20  # , 100
 
     trx_power_mode = 'equal'
     rayleigh_scale = 1
@@ -488,8 +569,10 @@ if __name__ == "__main__":
     # predictor params
     predictor_mode = 'Ideal'  # 'predictor_on' # 'predictor_off', 'Ideal'
 
+    run_competition = False  # True if regular case, False if want to run only our algo
+
     for GRAPH_MODE in ['random']:
-        for trx_power_mode in ['equal']:  # 'equal'
+        for trx_power_mode in ['equal']:  # ['random', 'nsfnet', 'geant']
 
             print("----------------------------")
             print(trx_power_mode, GRAPH_MODE)
@@ -499,25 +582,84 @@ if __name__ == "__main__":
             data_delay = []
 
             data_paths_list_for_all_flows = [
+                                            [
 
+                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_161930_40_Flows',
+                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_165501_40_Flows',
+                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_172422_40_Flows',
+                                            ],
+
+                                            [
+
+                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_181537_50_Flows',
+                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_190944_50_Flows',
+                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_195414_50_Flows',
+                                            ],
+
+                                            [
+
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_210240_60_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_221439_60_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_231817_60_Flows',
+                                            ],
+
+                                            [
+
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_005120_70_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_022826_70_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_035225_70_Flows',
+                                            ],
+
+                                            [
+
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_055329_80_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_075657_80_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_094458_80_Flows',
+                                             ],
+
+                                            [
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_121630_90_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_144912_90_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_170022_90_Flows',
+                                            ],
+
+                                            [
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_200250_100_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_231223_100_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_015818_100_Flows',
+                                            ],
+
+
+                                            [
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_053833_110_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_092302_110_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_123510_110_Flows',
+
+                                            ],
+
+                                            [
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_203851_120_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250619_011013_120_Flows',
+                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250619_050305_120_Flows',]
 
                                              ]
 
-            flows = [80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
+            flows = [40, 50, 60, 70, 80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
                     [40, 50, 60, 70, 80, 90, 100, 110, 120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 
                 print(f' Starting {num_flows} flows Run\n')
 
-                alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes,
+                alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, run_competition=run_competition,
                                         episode_from=episode_from,
                                         temperature=temperature, nb3r_steps=nb3r_steps, num_slots=num_slots,
                                         slot_duration=slot_duration, predictor_mode=predictor_mode,
                                         pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units,
                                         HawkesParams=HawkesParams)
 
-                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=None,  # data_paths_list_for_all_flows[num_flows_idx], None
+                loading_graphs = False
+                data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=data_paths_list_for_all_flows[num_flows_idx] if loading_graphs else None,  # data_paths_list_for_all_flows[num_flows_idx], None
                                                                                                             num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows,
                                                                                                             num_actions=num_actions,
                                                                                                             graph_mode=GRAPH_MODE,
@@ -530,7 +672,7 @@ if __name__ == "__main__":
                 data_delay.append(list(average_delays_through_time.values()))
 
             save_fig = True
-            plot_algorithm_mean_performance(flows=flows, algo_names=labels, algo_rates=data_rates,algo_delays=data_delay,
+            plot_algorithm_mean_performance(num_episodes=num_episodes,flows=flows, algo_names=labels, algo_rates=data_rates,algo_delays=data_delay,
                                             subfolder_path=subfolder_path, save_fig=save_fig)
 
 

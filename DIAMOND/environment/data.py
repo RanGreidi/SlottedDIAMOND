@@ -185,7 +185,7 @@ def generate_env(num_nodes=10,
                    seed=seed,
                    **kwargs)
 
-    env_configurations = dict(  adjacency_matrix=adjacency,
+    env_configurations = dict(adjacency_matrix=adjacency,
                                 bandwidth_matrix=capacity_matrix,
                                 interference_matrix=interference_matrix,
                                 node_positions=positions,
