@@ -5,7 +5,7 @@ from DIAMOND.stage1_grrl import GRRL
 from DIAMOND.stage2_nb3r import nb3r
 from DIAMOND.environment import GraphEnvPower as GraphEnv
 from DIAMOND.environment.utils import *
-# from DIAMOND.environment.FlowPrediction import FlowPrediction
+from DIAMOND.environment.FlowPrediction import FlowPrediction
 
 class SLOTTED_DIAMOND:
     def __init__(self,

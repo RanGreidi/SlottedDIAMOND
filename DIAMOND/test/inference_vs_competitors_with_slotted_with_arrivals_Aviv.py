@@ -28,7 +28,8 @@ from DIAMOND.environment.utils import *
 from DIAMOND.environment.utils import keep_gpu_active_heavy
 
 # -------------- Start Cluster GPU ping thread in background for avoiding IDLE state ------------- #
-if torch.cuda.is_available():
+using_cluster = True
+if torch.cuda.is_available() and using_cluster:
     keep_gpu_active_heavy(interval_seconds=60)  # Try 60 seconds
 # ------------------------------------------------------------------------------------------------ #
 
@@ -369,7 +370,7 @@ class TestvsCompetitors:
         delivered_packets [Megabit]
         '''
 
-        # adding flow pkts according to arrivle statistics
+        # adding flow pkts according to arrival statistics only if predictor is "on" or "Ideal" else just subtract
         if self.predictor_mode == 'predictor_off':
             pass
 
@@ -529,8 +530,8 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 50  # 60
-    num_edges = 80  # 90
+    num_nodes = 10  # 60
+    num_edges = 45  # 90
     num_actions = 15  # 15, 4
     temperature = 1.2
     num_episodes = 3  # 3
@@ -567,9 +568,9 @@ if __name__ == "__main__":
         ManualAdded_Fixed_InitalPkts=100)  # 0.1, 100, 350, 50
 
     # predictor params
-    predictor_mode = 'Ideal'  # 'predictor_on' # 'predictor_off', 'Ideal'
+    predictor_mode = 'predictor_on'  # 'predictor_on' # 'predictor_off', 'Ideal'
 
-    run_competition = False  # True if regular case, False if want to run only our algo
+    run_competition = True  # True if regular case, False if want to run only our algo
 
     for GRAPH_MODE in ['random']:
         for trx_power_mode in ['equal']:  # ['random', 'nsfnet', 'geant']
@@ -582,65 +583,66 @@ if __name__ == "__main__":
             data_delay = []
 
             data_paths_list_for_all_flows = [
+
                                             [
 
-                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_161930_40_Flows',
-                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_165501_40_Flows',
-                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_172422_40_Flows',
+                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250713_130545_40_Flows/',
+                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250713_131434_40_Flows/',
+                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250713_132034_40_Flows/',
                                             ],
 
                                             [
 
-                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_181537_50_Flows',
-                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_190944_50_Flows',
-                                                r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_195414_50_Flows',
+                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250713_132934_50_Flows/',
+                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250713_134223_50_Flows/',
+                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250713_135140_50_Flows/',
                                             ],
 
                                             [
 
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_210240_60_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_221439_60_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250616_231817_60_Flows',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250713_140322_60_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_093010_60_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_094305_60_Flows/',
                                             ],
 
                                             [
 
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_005120_70_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_022826_70_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_035225_70_Flows',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_095856_70_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_102137_70_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_103827_70_Flows/',
                                             ],
 
                                             [
 
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_055329_80_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_075657_80_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_094458_80_Flows',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_105631_80_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_112557_80_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_114737_80_Flows/',
                                              ],
 
                                             [
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_121630_90_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_144912_90_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_170022_90_Flows',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_120957_90_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_124632_90_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_131429_90_Flows/',
                                             ],
 
                                             [
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_200250_100_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250617_231223_100_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_015818_100_Flows',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_134154_100_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_142636_100_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_145932_100_Flows/',
                                             ],
 
 
                                             [
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_053833_110_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_092302_110_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_123510_110_Flows',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_153218_110_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_162514_110_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_170358_110_Flows/',
 
                                             ],
 
                                             [
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250618_203851_120_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250619_011013_120_Flows',
-                                             r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250619_050305_120_Flows',]
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_174239_120_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_184507_120_Flows/',
+                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_45_Edges/20250714_193123_120_Flows/']
 
                                              ]
 
@@ -658,7 +660,7 @@ if __name__ == "__main__":
                                         pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units,
                                         HawkesParams=HawkesParams)
 
-                loading_graphs = False
+                loading_graphs = True
                 data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=data_paths_list_for_all_flows[num_flows_idx] if loading_graphs else None,  # data_paths_list_for_all_flows[num_flows_idx], None
                                                                                                             num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows,
                                                                                                             num_actions=num_actions,

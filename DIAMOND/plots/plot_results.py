@@ -1,3 +1,4 @@
+import copy
 import os.path
 
 import pandas as pd
@@ -92,8 +93,8 @@ def plot_algorithm_metrics(data_dict, Gloval_env, graph_mode, save_fig):
         save_path (str): File path to save the figure.
     """
 
-    base_path = r"C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_arrivals"
-    # base_path = r'/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction'  # with_arrivals   # For claster
+    # base_path = r"C:\Users\beaviv\DIAMOND-slotted_manual_Plots\without_arrivals"
+    base_path = r'/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction'  # with_arrivals   # For claster
     base_path = os.path.join(base_path, f"{graph_mode}", f"{Gloval_env.kwargs['trx_power_mode']}")
     subfolder_name = f"{Gloval_env.num_nodes}_Nodes_{Gloval_env.num_edges // 2}_Edges"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Add timestamp
@@ -302,20 +303,29 @@ def plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_
     algo_rates = with_pred_data['algo_rates']
     algo_delays = with_pred_data['algo_delays']
 
-    algo_names[0] = 'SlottedDIAMOND_Prediction'
-    algo_names.insert(1, 'SlottedDIAMOND_Ideal')
+    # algo_names[0] = 'SlottedDIAMOND_Prediction'
+    algo_names[0] = 'Algo_Prediction'
+
+    # algo_names.insert(1, 'SlottedDIAMOND_Ideal')
+    algo_names[1] = 'Algo_Ideal'  # Not using "DIAMOND"
 
     # ---------------- Add Manually with_arrival SlottedDIAMOND data to with_prediction data ----------- #
     for num_flows_index in range(len(flows)):
-        algo_rates[num_flows_index].insert(1, with_arrival_data['algo_rates'][num_flows_index][0])  # TODO: in algo_rates[num_flows_index]. [0] represents the results for slotted_diamond
-        algo_delays[num_flows_index].insert(1, with_arrival_data['algo_delays'][num_flows_index][0])
+        # algo_rates[num_flows_index].insert(1, with_arrival_data['algo_rates'][num_flows_index][0])  # TODO: in algo_rates[num_flows_index]. [0] represents the results for slotted_diamond
+        algo_rates[num_flows_index][1] = with_arrival_data['algo_rates'][num_flows_index][0]  # Not using DIAMOND
+
+        # algo_delays[num_flows_index].insert(1, with_arrival_data['algo_delays'][num_flows_index][0])
+        algo_delays[num_flows_index][1] = with_arrival_data['algo_delays'][num_flows_index][0]  # Not using DIAMOND
 
     # ---------------------------------------------------------------------------------------------------- #
 
 
     # File paths for saving data
-    save_plot_path = os.path.join(with_pred_folder, f'algorithm_performance_rates_delays_{num_episodes}_after_change.png')
-    save_data_path_pickle = os.path.join(with_pred_folder, "performance_data_after_change.pkl")  # Save as Pickle
+    # save_plot_path = os.path.join(with_pred_folder, f'algorithm_performance_rates_delays_{num_episodes}_after_change.png')
+    save_plot_path = os.path.join(with_pred_folder, f'algorithm_performance_rates_delays_{num_episodes}_no_DIAMOND.png')
+
+    # save_data_path_pickle = os.path.join(with_pred_folder, "performance_data_after_change.pkl")  # Save as Pickle
+    save_data_path_pickle = os.path.join(with_pred_folder, "performance_data_no_DIAMOND.pkl")  # Save as Pickle
 
     fig, axes = plt.subplots(1, 2, figsize=(15, 5))  # Create two subplots side by side
 
@@ -330,7 +340,7 @@ def plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_
         marker = markers[idx % len(markers)]
         rates = [algo_rates[i][idx] for i in range(len(flows))]
 
-        if algo_name == 'SlottedDIAMOND_Ideal':
+        if algo_name == 'Algo_Ideal':  # 'SlottedDIAMOND_Ideal'
             ax1.plot(flows, rates, linestyle='--', color=color, marker=marker, markersize=8,
                      markerfacecolor='none', markeredgecolor=color, label=algo_name)
 
@@ -342,7 +352,7 @@ def plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_
     ax1.set_xticklabels(flows, fontsize=10)
     ax1.set_xlabel("Number of Flows", fontsize=12)
     ax1.set_ylabel("Avg. Flow Rate [Mbps]", fontsize=12)
-    ax1.set_title("Algorithm Performance: Rates vs Flows", fontsize=14)
+    # ax1.set_title("Algorithm Performance: Rates vs Flows", fontsize=14)
     ax1.legend(loc='best', fontsize=10)
     ax1.grid(True, linestyle='--', linewidth=0.5)
 
@@ -353,7 +363,7 @@ def plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_
         marker = markers[idx % len(markers)]
         delays = [algo_delays[i][idx] for i in range(len(flows))]
 
-        if algo_name == 'SlottedDIAMOND_Ideal':
+        if algo_name == 'Algo_Ideal':  # 'SlottedDIAMOND_Ideal'
             ax2.plot(flows, delays, linestyle='--', color=color, marker=marker, markersize=8,
                  markerfacecolor='none', markeredgecolor=color, label=algo_name)
 
@@ -364,8 +374,147 @@ def plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_
     ax2.set_xticks(flows)
     ax2.set_xticklabels(flows, fontsize=10)
     ax2.set_xlabel("Number of Flows", fontsize=12)
-    ax2.set_ylabel("Avg. Flow Delays [s]", fontsize=12)
-    ax2.set_title("Algorithm Performance: Delays vs Flows", fontsize=14)
+    ax2.set_ylabel("Avg. Flow Delays [µs]", fontsize=12)
+    # ax2.set_title("Algorithm Performance: Delays vs Flows", fontsize=14)
+    ax2.legend(loc='best', fontsize=10)
+    ax2.grid(True, linestyle='--', linewidth=0.5)
+
+    # Adjust layout for better spacing
+    plt.tight_layout()
+
+    # Save and show the plot
+    # Ensure the directory exists
+    # os.makedirs(subfolder_path, exist_ok=True)
+    if save_fig:
+        plt.savefig(save_plot_path, dpi=300)
+
+    # plt.show()
+
+    # Save data in Pickle format
+    data_to_save = {
+        "flows": flows,
+        "algo_names": algo_names,
+        "algo_rates": algo_rates,
+        "algo_delays": algo_delays
+    }
+    # Save data in Pickle format (for faster loading in Python)
+    with open(save_data_path_pickle, "wb") as pickle_file:
+        pickle.dump(data_to_save, pickle_file)
+
+
+def plot_algorithm_mean_performance_for_paper(with_pred_folder,num_episodes=3, save_fig=True):
+
+    #  ----------------- Loading data -------------------------------- #
+    with_pred_data_path = os.path.join(with_pred_folder, "performance_data.pkl")
+    with_pred_data = load_pickle_file(with_pred_data_path)
+
+    # ----------------------------------------------------------------- #
+    # with pred data
+    flows = with_pred_data['flows']
+    algo_names = with_pred_data['algo_names']
+    algo_rates = with_pred_data['algo_rates']
+    algo_delays = with_pred_data['algo_delays']
+
+    # algo_names[0] = 'SlottedDIAMOND_Prediction'
+    algo_names[0] = 'DPIR'
+
+    # algo_names.insert(1, 'SlottedDIAMOND_Ideal')
+    algo_names.pop(1)  # Not using "DIAMOND"
+
+    og_algos = ['SlotedDIAMOND', 'GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
+
+    algo_names = ['DPIR', 'GRRL', 'IACR', 'DQN+GNN', 'OSPF', 'DIAR', 'RandomBL']  #'DQN+GNN'
+    algo_names_delays = ['RandomBL', 'OSPF', 'DIAR', 'DQN+GNN', 'IACR', 'GRRL', 'DPIR']  #'DQN+GNN'
+
+    # ---------------- Add Manually with_arrival SlottedDIAMOND data to with_prediction data ----------- #
+    for num_flows_index in range(len(flows)):
+
+        algo_rates[num_flows_index].pop(1)  # Not using DIAMOND
+        dqn_data = copy.deepcopy(algo_rates[num_flows_index][2])
+        ospf_data = copy.deepcopy(algo_rates[num_flows_index][3])
+        rb_data = copy.deepcopy(algo_rates[num_flows_index][4])
+        diar_data = copy.deepcopy(algo_rates[num_flows_index][5])
+        iacr_data = copy.deepcopy(algo_rates[num_flows_index][6])
+
+        algo_rates[num_flows_index][2] = iacr_data
+        algo_rates[num_flows_index][3] = dqn_data
+        algo_rates[num_flows_index][4] = ospf_data
+        algo_rates[num_flows_index][5] = diar_data
+        algo_rates[num_flows_index][6] = rb_data
+
+
+        # algo_delays[num_flows_index].insert(1, with_arrival_data['algo_delays'][num_flows_index][0])
+        algo_delays[num_flows_index].pop(1)  # Not using DIAMOND
+
+        dpir_data = copy.deepcopy(algo_delays[num_flows_index][0])
+        grrl_data = copy.deepcopy(algo_delays[num_flows_index][1])
+
+        dqn_data = copy.deepcopy(algo_delays[num_flows_index][2])
+        ospf_data = copy.deepcopy(algo_delays[num_flows_index][3])
+        rb_data = copy.deepcopy(algo_delays[num_flows_index][4])
+        diar_data = copy.deepcopy(algo_delays[num_flows_index][5])
+        iacr_data = copy.deepcopy(algo_delays[num_flows_index][6])
+
+        algo_delays[num_flows_index][0] = rb_data
+        algo_delays[num_flows_index][1] = ospf_data
+        algo_delays[num_flows_index][2] = diar_data
+        algo_delays[num_flows_index][3] = dqn_data
+        algo_delays[num_flows_index][4] = iacr_data
+        algo_delays[num_flows_index][5] = grrl_data
+        algo_delays[num_flows_index][6] = dpir_data
+    # ---------------------------------------------------------------------------------------------------- #
+
+
+    # File paths for saving data
+    # save_plot_path = os.path.join(with_pred_folder, f'algorithm_performance_rates_delays_{num_episodes}_after_change.png')
+    save_plot_path = os.path.join(with_pred_folder, f'algorithm_performance_rates_delays_{num_episodes}_for_paper2.png')
+
+    # save_data_path_pickle = os.path.join(with_pred_folder, "performance_data_after_change.pkl")  # Save as Pickle
+    save_data_path_pickle = os.path.join(with_pred_folder, "performance_data_for_paper.pkl")  # Save as Pickle
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))  # Create two subplots side by side
+
+    # Define unique colors and markers
+    colors = ['b', 'r', 'darkviolet', 'green', 'orange', 'violet', 'k']
+    colors_delays = ['k', 'orange', 'violet', 'green', 'darkviolet', 'r', 'b']
+
+    markers = ['o', 'p', '+', '^', '*', '+', 'p']
+    markers_delays = ['p', '*', '+', '^', '+', 'p', 'o']
+
+    # 📌 **Plot Algorithm Rates**
+    ax1 = axes[0]  # First subplot for rates
+    for idx, algo_name in enumerate(algo_names):
+        color = colors[idx % len(colors)]
+        marker = markers[idx % len(markers)]
+        rates = [algo_rates[i][idx] for i in range(len(flows))]
+
+
+        ax1.plot(flows, rates, linestyle='-', color=color, marker=marker, markersize=8,
+                 markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+    ax1.set_xticks(flows)
+    ax1.set_xticklabels(flows, fontsize=10)
+    ax1.set_xlabel("Number of Flows", fontsize=12)
+    ax1.set_ylabel("Avg. Flow Rate [Mbps]", fontsize=12)
+    # ax1.set_title("Algorithm Performance: Rates vs Flows", fontsize=14)
+    ax1.legend(loc='best', fontsize=10)
+    ax1.grid(True, linestyle='--', linewidth=0.5)
+
+    # 📌 **Plot Algorithm Delays**
+    ax2 = axes[1]  # Second subplot for delays
+    for idx, algo_name in enumerate(algo_names_delays):
+        color = colors_delays[idx % len(colors_delays)]
+        marker = markers_delays[idx % len(markers_delays)]
+        delays = [algo_delays[i][idx] for i in range(len(flows))]
+
+        ax2.plot(flows, delays, linestyle='-', color=color, marker=marker, markersize=8,
+                 markerfacecolor='none', markeredgecolor=color, label=algo_name)
+
+    ax2.set_xticks(flows)
+    ax2.set_xticklabels(flows, fontsize=10)
+    ax2.set_xlabel("Number of Flows", fontsize=12)
+    ax2.set_ylabel("Avg. Flow Delays [timesteps]", fontsize=12)
+    # ax2.set_title("Algorithm Performance: Delays vs Flows", fontsize=14)
     ax2.legend(loc='best', fontsize=10)
     ax2.grid(True, linestyle='--', linewidth=0.5)
 
@@ -394,10 +543,14 @@ def plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_
 
 if __name__ == "__main__":
 
-    with_pred_folder = r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\50_Nodes_80_Edges\20250619_050305_120_Flows'
+    # with_pred_folder = r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_prediction\random\equal\80_Nodes_120_Edges\20250528_205647_120_Flows'
+    #
+    # with_arrival_folder = r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_arrivals\random\equal\80_Nodes_120_Edges\20250613_153038_120_Flows'
+    #
+    # plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_arrival_folder)
 
-    with_arrival_folder = r'C:\Users\beaviv\DIAMOND-slotted_manual_Plots\with_arrivals\random\equal\50_Nodes_80_Edges\20250619_223257_120_Flows'
+    with_pred_folder = r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_17_Edges/20250710_083025_50_Flows/'
 
-    plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_arrival_folder)
+    plot_algorithm_mean_performance_for_paper(with_pred_folder)
 
     print(f'finished')
