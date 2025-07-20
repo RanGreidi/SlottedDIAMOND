@@ -82,7 +82,7 @@ def plot_all():
                     title='V30E50, rayleigh')
 
 
-def plot_algorithm_metrics(data_dict, Gloval_env, graph_mode, save_fig):
+def plot_algorithm_metrics(data_dict, Gloval_env, graph_mode, save_fig, refinement_steps):
     """
     Plots three graphs for delay, rate, and active flows for different algorithms and saves the figure.
 
@@ -94,7 +94,7 @@ def plot_algorithm_metrics(data_dict, Gloval_env, graph_mode, save_fig):
     """
 
     # base_path = r"C:\Users\beaviv\DIAMOND-slotted_manual_Plots\without_arrivals"
-    base_path = r'/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction'  # with_arrivals   # For claster
+    base_path = f'/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_{refinement_steps}/with_prediction'  # with_arrivals   # For claster
     base_path = os.path.join(base_path, f"{graph_mode}", f"{Gloval_env.kwargs['trx_power_mode']}")
     subfolder_name = f"{Gloval_env.num_nodes}_Nodes_{Gloval_env.num_edges // 2}_Edges"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Add timestamp
@@ -549,7 +549,7 @@ if __name__ == "__main__":
     #
     # plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_arrival_folder)
 
-    with_pred_folder = r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/with_prediction/random/equal/10_Nodes_17_Edges/20250710_083025_50_Flows/'
+    with_pred_folder = r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250720_165935_120_Flows/'
 
     plot_algorithm_mean_performance_for_paper(with_pred_folder)
 

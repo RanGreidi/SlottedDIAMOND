@@ -117,7 +117,7 @@ class SLOTTED_DIAMOND:
 
         if grrl_data:
             return routs, rl_rates_data, rl_delay_data, action
-        return routs
+        return routs, rl_rates_data, rl_delay_data, nb3r_action
 
     def create_slot_flows(self, Global_flows):
         '''
