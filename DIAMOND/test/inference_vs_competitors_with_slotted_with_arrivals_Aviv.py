@@ -532,12 +532,12 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 70  # 60
-    num_edges = 140  # 90
+    num_nodes = 120  # 60
+    num_edges = 200  # 90
     num_actions = 15  # 15, 4
     temperature = 1.2
-    num_episodes = 3  # 3
-    episode_from = 7500  # 7500  # 7501
+    num_episodes = 2  # 3
+    episode_from = 7501  # 7500  # 7501
     nb3r_steps = 0 #20  # , 100
     refinement_steps = 10  # number of NB3R steps in slotted_diamond
 
@@ -589,68 +589,76 @@ if __name__ == "__main__":
 
                                             [
 
-                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_092257_40_Flows/',
-                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_100326_40_Flows/',
-                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_103059_40_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250722_161735_110_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250722_161735_110_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250722_184501_110_Flows/',
                                             ],
 
                                             [
 
-                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_112944_50_Flows/',
-                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_123019_50_Flows/',
-                                                r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_131143_50_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250722_202221_120_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250723_172834_120_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250723_190800_120_Flows/',
                                             ],
 
                                             [
 
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_143209_60_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_155511_60_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_165311_60_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250724_115736_130_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250724_133859_130_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250724_153601_130_Flows/',
                                             ],
 
                                             [
 
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_183944_70_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_203138_70_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250717_215102_70_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250724_174903_140_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250724_195030_140_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250724_221108_140_Flows/',
                                             ],
 
                                             [
 
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_001135_80_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_023753_80_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_042838_80_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250726_121445_150_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250726_144137_150_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250726_172612_150_Flows/',
                                              ],
 
                                             [
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_072924_90_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_103845_90_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_125916_90_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250726_203345_160_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250726_232927_160_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250727_024056_160_Flows/',
                                             ],
 
                                             [
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_164827_100_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250718_215154_100_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250719_005507_100_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250727_061211_170_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250727_094126_170_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250727_132231_170_Flows/',
                                             ],
 
 
                                             [
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250719_143757_110_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250719_194132_110_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250719_233956_110_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250727_173052_180_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250728_131049_180_Flows/',
+                                             r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250729_191823_180_Flows/',
 
                                             ],
 
                                             [
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250720_053602_120_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250720_120059_120_Flows/',
-                                             r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250720_165935_120_Flows/']
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250731_162100_190_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250805_184125_190_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250805_233010_190_Flows/',
+
+                                            ],
+
+                                            [
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250806_144958_200_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250806_200343_200_Flows/',
+                                                r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250807_012937_200_Flows/',
+
+                                            ],
 
                                              ]
 
-            flows = [40, 50, 60, 70, 80, 90, 100, 110, 120] if GRAPH_MODE == 'random' else \
-                    [40, 50, 60, 70, 80, 90, 100, 110, 120]
+            flows = [60,70,80,90,100,110,120]  # [40,50,60,70,80,90,100,110,120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 
@@ -677,7 +685,7 @@ if __name__ == "__main__":
                 data_delay.append(list(average_delays_through_time.values()))
 
             save_fig = True
-            plot_algorithm_mean_performance(num_episodes=num_episodes,flows=flows, algo_names=labels, algo_rates=data_rates,algo_delays=data_delay,
+            plot_algorithm_mean_performance(num_episodes=num_episodes, flows=flows, algo_names=labels, algo_rates=data_rates,algo_delays=data_delay,
                                             subfolder_path=subfolder_path, save_fig=save_fig)
 
 

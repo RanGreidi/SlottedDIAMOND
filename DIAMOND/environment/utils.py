@@ -258,7 +258,7 @@ def create_geant2_graph():
          (5, 8), (6, 9), (6, 8), (7, 11), (7, 8), (8, 11), (8, 20), (8, 17), (8, 18), (8, 12),
          (9, 10), (9, 13), (9, 12), (10, 13), (11, 20), (11, 14), (12, 13), (12, 19), (12, 21),
          (14, 15), (15, 16), (16, 17), (17, 18), (18, 21), (19, 23), (21, 22), (22, 23)])
-    A = np.array(nx.to_numpy_matrix(Gbase))
+    A = np.array(nx.to_numpy_array(Gbase))
     A = np.clip(A + A.T, a_min=0, a_max=1)
     pos = nx.spring_layout(Gbase, seed=1234)
     pos = np.stack(list(pos.values()), axis=0)

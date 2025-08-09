@@ -549,7 +549,7 @@ if __name__ == "__main__":
     #
     # plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_arrival_folder)
 
-    with_pred_folder = r'/sise/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/70_Nodes_140_Edges/20250720_165935_120_Flows/'
+    with_pred_folder = r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250807_012937_200_Flows/'
 
     plot_algorithm_mean_performance_for_paper(with_pred_folder)
 
