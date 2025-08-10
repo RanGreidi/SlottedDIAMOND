@@ -538,7 +538,7 @@ if __name__ == "__main__":
     temperature = 1.2
     num_episodes = 2  # 3
     episode_from = 7501  # 7500  # 7501
-    nb3r_steps = 0 #20  # , 100
+    nb3r_steps = 2 #20  # , 100
     refinement_steps = 10  # number of NB3R steps in slotted_diamond
 
     trx_power_mode = 'equal'
@@ -658,7 +658,7 @@ if __name__ == "__main__":
 
                                              ]
 
-            flows = [60,70,80,90,100,110,120]  # [40,50,60,70,80,90,100,110,120]
+            flows = [70,80,90,100,110,120]  # [40,50,60,70,80,90,100,110,120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 
