@@ -423,21 +423,25 @@ def plot_algorithm_mean_performance_for_paper(with_pred_folder,num_episodes=3, s
 
     og_algos = ['SlotedDIAMOND', 'GRRL', 'DQN+GNN', 'OSPF', 'RandomBL', 'DIAR', 'IACR']
 
-    algo_names = ['DPIR', 'GRRL', 'IACR', 'DQN+GNN', 'OSPF', 'DIAR', 'RandomBL']  #'DQN+GNN'
-    algo_names_delays = ['RandomBL', 'OSPF', 'DIAR', 'DQN+GNN', 'IACR', 'GRRL', 'DPIR']  #'DQN+GNN'
+    algo_names = ['DPIR', 'GRRL', 'DQN+GNN', 'IACR', 'OSPF', 'DIAR', 'RandomBL']  # ['DPIR', 'GRRL', 'IACR', 'DQN+GNN', 'OSPF', 'DIAR', 'RandomBL']
+    algo_names_delays = ['RandomBL', 'DIAR', 'DQN+GNN', 'OSPF', 'IACR', 'GRRL', 'DPIR']  #'DQN+GNN'  ['RandomBL', 'OSPF', 'DIAR', 'DQN+GNN', 'IACR', 'GRRL', 'DPIR']
 
     # ---------------- Add Manually with_arrival SlottedDIAMOND data to with_prediction data ----------- #
     for num_flows_index in range(len(flows)):
 
         algo_rates[num_flows_index].pop(1)  # Not using DIAMOND
+        dpir_data = copy.deepcopy(algo_rates[num_flows_index][0])
+        grrl_data = copy.deepcopy(algo_rates[num_flows_index][1])
         dqn_data = copy.deepcopy(algo_rates[num_flows_index][2])
         ospf_data = copy.deepcopy(algo_rates[num_flows_index][3])
         rb_data = copy.deepcopy(algo_rates[num_flows_index][4])
         diar_data = copy.deepcopy(algo_rates[num_flows_index][5])
         iacr_data = copy.deepcopy(algo_rates[num_flows_index][6])
 
-        algo_rates[num_flows_index][2] = iacr_data
-        algo_rates[num_flows_index][3] = dqn_data
+        algo_rates[num_flows_index][0] = dpir_data
+        algo_rates[num_flows_index][1] = grrl_data
+        algo_rates[num_flows_index][2] = dqn_data
+        algo_rates[num_flows_index][3] = iacr_data
         algo_rates[num_flows_index][4] = ospf_data
         algo_rates[num_flows_index][5] = diar_data
         algo_rates[num_flows_index][6] = rb_data
@@ -448,7 +452,6 @@ def plot_algorithm_mean_performance_for_paper(with_pred_folder,num_episodes=3, s
 
         dpir_data = copy.deepcopy(algo_delays[num_flows_index][0])
         grrl_data = copy.deepcopy(algo_delays[num_flows_index][1])
-
         dqn_data = copy.deepcopy(algo_delays[num_flows_index][2])
         ospf_data = copy.deepcopy(algo_delays[num_flows_index][3])
         rb_data = copy.deepcopy(algo_delays[num_flows_index][4])
@@ -456,9 +459,9 @@ def plot_algorithm_mean_performance_for_paper(with_pred_folder,num_episodes=3, s
         iacr_data = copy.deepcopy(algo_delays[num_flows_index][6])
 
         algo_delays[num_flows_index][0] = rb_data
-        algo_delays[num_flows_index][1] = ospf_data
-        algo_delays[num_flows_index][2] = diar_data
-        algo_delays[num_flows_index][3] = dqn_data
+        algo_delays[num_flows_index][1] = diar_data
+        algo_delays[num_flows_index][2] = dqn_data
+        algo_delays[num_flows_index][3] = ospf_data
         algo_delays[num_flows_index][4] = iacr_data
         algo_delays[num_flows_index][5] = grrl_data
         algo_delays[num_flows_index][6] = dpir_data
@@ -474,12 +477,36 @@ def plot_algorithm_mean_performance_for_paper(with_pred_folder,num_episodes=3, s
 
     fig, axes = plt.subplots(1, 2, figsize=(15, 5))  # Create two subplots side by side
 
-    # Define unique colors and markers
-    colors = ['b', 'r', 'darkviolet', 'green', 'orange', 'violet', 'k']
-    colors_delays = ['k', 'orange', 'violet', 'green', 'darkviolet', 'r', 'b']
+    # ----------------------- color and markers per alg -------------------- #
 
-    markers = ['o', 'p', '+', '^', '*', '+', 'p']
-    markers_delays = ['p', '*', '+', '^', '+', 'p', 'o']
+    dpir_color = 'b'
+    grrl_color = 'r'
+    iacr_color = 'darkviolet'
+    dqn_color = 'green'
+    ospf_color = 'orange'
+    diar_color = 'violet'
+    rb_color = 'k'
+
+    dpir_marker = 'o'
+    grrl_marker = 'p'
+    dqn_marker = '^'
+    iacr_marker = '+'
+    diar_marker = '+'
+    ospf_marker = '*'
+    rb_marker = 'p'
+
+    #----------------------------------------------------------------------- #
+
+    # Define unique colors and markers
+
+    # algo_names = ['DPIR', 'GRRL', 'DQN+GNN', 'IACR', 'OSPF', 'DIAR', 'RandomBL']  # ['DPIR', 'GRRL', 'IACR', 'DQN+GNN', 'OSPF', 'DIAR', 'RandomBL']
+    # algo_names_delays = ['RandomBL', 'DIAR', 'DQN+GNN', 'OSPF', 'IACR', 'GRRL', 'DPIR']  #'DQN+GNN'  ['RandomBL', 'OSPF', 'DIAR', 'DQN+GNN', 'IACR', 'GRRL', 'DPIR']
+
+    colors = [dpir_color, grrl_color, dqn_color, iacr_color, ospf_color, diar_color, rb_color]
+    colors_delays = [rb_color, diar_color, dqn_color, ospf_color, iacr_color, grrl_color, dpir_color]
+
+    markers = [dpir_marker, grrl_marker, dqn_marker, iacr_marker, ospf_marker, diar_marker, rb_marker]
+    markers_delays = [rb_marker, diar_marker, dqn_marker, ospf_marker, iacr_marker, grrl_marker, dpir_marker]
 
     # 📌 **Plot Algorithm Rates**
     ax1 = axes[0]  # First subplot for rates
@@ -549,7 +576,7 @@ if __name__ == "__main__":
     #
     # plot_algorithm_mean_performance_with_manual_addition(with_pred_folder, with_arrival_folder)
 
-    with_pred_folder = r'/mnt/new_home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/geant/equal/24_Nodes_37_Edges/20250807_012937_200_Flows/'
+    with_pred_folder = r'/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_10/with_prediction/random/equal/120_Nodes_200_Edges/20250904_162720_120_Flows/'
 
     plot_algorithm_mean_performance_for_paper(with_pred_folder)
 
