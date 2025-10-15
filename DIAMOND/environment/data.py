@@ -71,11 +71,13 @@ def generate_env(num_nodes=10,
                  num_slots=None,
                  **kwargs):
     # assert graph_mode.lower() in ['random', 'nsfnet', 'geant']
-    assert graph_mode.lower() in ['random', 'nsfnet', 'geant', 'grid', 'irregular_grid_8x8', 'irregular_grid_6x6']
+    assert graph_mode.lower() in ['random', 'random_internet', 'nsfnet', 'geant', 'grid', 'irregular_grid_8x8', 'irregular_grid_6x6']
 
     # 1. create graph
     if graph_mode == 'random':
         adjacency, positions = generate_random_graph(n=num_nodes, e=num_edges, seed=seed)
+    elif graph_mode == 'random_internet':
+        adjacency, positions = generate_random_internet_graph(n_total=num_nodes, n_clusters=9, p_intra=0.4, p_inter=0.02, seed=seed)
     elif graph_mode == 'nsfnet':
         adjacency, positions = create_nsfnet_graph()
         num_nodes = 14

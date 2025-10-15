@@ -105,7 +105,7 @@ class TestvsCompetitors:
                                                                             pkt_arrival_sample_rate=self.pkt_arrival_sample_rate)
             
             # generate first decisions
-
+            # show_graph(Gloval_env.graph)
             # Run Slotted DIAMOND
             _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env), env_configurations, flows_statistics, grrl_data=True)  
             # Run DIAMOND 
@@ -352,8 +352,8 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 10  # 60
-    num_edges = 15  # 90
+    num_nodes = 60  # 60
+    num_edges = 90  # 90
     num_actions = 15
     temperature = 1.2
     num_episodes = 1
@@ -392,7 +392,7 @@ if __name__ == "__main__":
     # predictor params    
     predictor_mode = 'predictor_on' # 'predictor_on' # 'predictor_off' # 'Ideal'
     
-    for GRAPH_MODE in ['random']:
+    for GRAPH_MODE in ['random_internet','random']:
         for trx_power_mode in ['equal']:
 
             print("----------------------------")
