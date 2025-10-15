@@ -125,7 +125,7 @@ class HawkesModel:
         plt.figure(figsize=(10, 6))
         plt.step([step for step in range(len(total_run_count))],total_run_count, marker='*', label="Count Process N(t) Interpolated")
         # original
-        plt.step(self.events, self.orig_counts, where='post', color='r', label="Count Process N(t) ORIGINAL")
+        # plt.step(self.events, self.orig_counts, where='post', color='r', label="Count Process N(t) ORIGINAL")
         plt.axvline(x=self.history_num_slots, color='black', linestyle='dashed')
         plt.title("Hawkes Process - Count Process Over Time")
         plt.legend()

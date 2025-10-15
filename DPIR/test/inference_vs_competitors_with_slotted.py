@@ -357,7 +357,7 @@ if __name__ == "__main__":
     num_actions = 15
     temperature = 1.2
     num_episodes = 1
-    episode_from = 7500
+    episode_from = 7503
     nb3r_steps = 1
 
     trx_power_mode = 'equal'
@@ -390,7 +390,7 @@ if __name__ == "__main__":
     ManualAdded_Fixed_InitalPkts=100)
 
     # predictor params    
-    predictor_mode = 'predictor_on' # 'predictor_on' # 'predictor_off'
+    predictor_mode = 'predictor_on' # 'predictor_on' # 'predictor_off' # 'Ideal'
     
     for GRAPH_MODE in ['random']:
         for trx_power_mode in ['equal']:
@@ -402,7 +402,7 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            for num_flows in [60, 100, 150, 300, 700, 800, 900] if GRAPH_MODE == 'random' else \
+            for num_flows in [60, 100, 150, 200, 250, 300, 400] if GRAPH_MODE == 'random' else \
                              [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
                 
                 alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, episode_from=episode_from,
