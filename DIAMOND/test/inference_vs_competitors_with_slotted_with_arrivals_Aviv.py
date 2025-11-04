@@ -533,8 +533,8 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 120  # 60
-    num_edges = 200  # 90
+    num_nodes = 60  # 60
+    num_edges = 90  # 90
     num_actions = 15  # 15, 4
     temperature = 1.2
     num_episodes = 3  # 3
@@ -576,7 +576,7 @@ if __name__ == "__main__":
 
     run_competition = True  # True if regular case, False if want to run only our algo
 
-    for GRAPH_MODE in ['random']:  # ['random', 'nsfnet', 'geant']
+    for GRAPH_MODE in ['random_internet']:  # ['random', 'nsfnet', 'geant','random_internet']
         for trx_power_mode in ['equal']:
 
             print("----------------------------")
@@ -654,7 +654,7 @@ if __name__ == "__main__":
 
                                              ]
 
-            flows = [40,50,60,70,80,90,100,110,120]  # [40,50,60,70,80,90,100,110,120]
+            flows = [70,80,90,100,110,120]  # [40,50,60,70,80,90,100,110,120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 
@@ -667,7 +667,7 @@ if __name__ == "__main__":
                                         pkt_arrival_sample_rate=pkt_arrival_sample_rate, pkt_size=pkt_size, units=units,
                                         HawkesParams=HawkesParams)
 
-                loading_graphs = True
+                loading_graphs = False
                 data, labels, average_rates_through_time, average_delays_through_time, subfolder_path = alg(data_paths_list=data_paths_list_for_all_flows[num_flows_idx] if loading_graphs else None,  # data_paths_list_for_all_flows[num_flows_idx], None
                                                                                                             num_nodes=num_nodes, num_edges=num_edges, num_flows=num_flows,
                                                                                                             num_actions=num_actions,

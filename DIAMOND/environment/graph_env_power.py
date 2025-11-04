@@ -195,9 +195,9 @@ class GraphEnvPower:
         self.gen_edge_data()
         self.init_edge_data()
 
-    def show_graph(self, save_path, show_fig=True):
+    def show_graph(self, save_path, show_fig=True, save_fig=True):
         """ draw global graph"""
-        save_fig = True
+        # save_fig = True
         plt.figure()
         nx.draw_networkx(self.graph, self.graph_pos, with_labels=False, node_color="tab:blue",node_size=100)
         plt.axis('off')

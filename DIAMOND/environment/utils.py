@@ -246,6 +246,84 @@ def generate_random_graph(n, e, seed=None):
     return adjacency, positions
 
 
+def generate_random_internet_graph(n_total, n_clusters=3, p_intra=0.4, p_inter=0.02, seed=None):
+    """
+    Generate a random clustered communication-like graph that is fully connected.
+
+    Parameters
+    ----------
+    n_total : int
+        Total number of nodes in the graph.
+    n_clusters : int
+        Number of subnetworks (clusters).
+    p_intra : float
+        Probability of intra-cluster edges.
+    p_inter : float
+        Probability of extra inter-cluster edges beyond the guaranteed ones.
+    seed : int, optional
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    A : np.ndarray
+        Adjacency matrix of shape (n_total, n_total)
+    pos : np.ndarray
+        Node position matrix of shape (n_total, 2)
+    """
+    rng = np.random.default_rng(seed)
+    G = nx.Graph()
+
+    # Divide nodes among clusters
+    cluster_sizes = np.full(n_clusters, n_total // n_clusters)
+    cluster_sizes[:n_total % n_clusters] += 1
+    cluster_nodes = []
+    start = 0
+
+    for size in cluster_sizes:
+        nodes = range(start, start + size)
+        start += size
+        cluster_nodes.append(list(nodes))
+
+        # Create dense subgraph
+        subG = nx.erdos_renyi_graph(size, p_intra, seed=int(rng.integers(1e9)))
+        mapping = {old: new for old, new in zip(subG.nodes(), nodes)}
+        subG = nx.relabel_nodes(subG, mapping)
+        G = nx.compose(G, subG)
+
+    # Step 1: Ensure connectivity between clusters (chain)
+    for i in range(n_clusters - 1):
+        node_i = rng.choice(cluster_nodes[i])
+        node_j = rng.choice(cluster_nodes[i + 1])
+        G.add_edge(node_i, node_j)
+
+    # Step 2: Add a few random inter-cluster edges (optional)
+    for i in range(n_clusters):
+        for j in range(i + 1, n_clusters):
+            if rng.random() < p_inter:
+                node_i = rng.choice(cluster_nodes[i])
+                node_j = rng.choice(cluster_nodes[j])
+                G.add_edge(node_i, node_j)
+
+    # Step 3: Double-check connectivity (rarely needed, but ensures safety)
+    if not nx.is_connected(G):
+        components = list(nx.connected_components(G))
+        for c1, c2 in zip(components[:-1], components[1:]):
+            node1 = rng.choice(list(c1))
+            node2 = rng.choice(list(c2))
+            G.add_edge(node1, node2)
+
+    # Generate clustered positions
+    centers = rng.random((n_clusters, 2)) * 0.8 + 0.1
+    pos = np.zeros((n_total, 2))
+    for i, nodes in enumerate(cluster_nodes):
+        for node in nodes:
+            pos[node] = centers[i] + 0.05 * rng.standard_normal(2)
+
+    # Convert to adjacency and position arrays
+    A = nx.to_numpy_array(G, nodelist=range(n_total))
+    return A, pos
+
+
 def create_geant2_graph():
     """
     nodes and edges from: https://github.com/knowledgedefinednetworking/DRL-GNN/blob/master/DQN/gym-environments/gym_environments/envs/environment1.py
