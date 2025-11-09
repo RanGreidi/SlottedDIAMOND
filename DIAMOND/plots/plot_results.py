@@ -94,7 +94,7 @@ def plot_algorithm_metrics(data_dict, Gloval_env, graph_mode, save_fig, refineme
     """
 
     # base_path = r"C:\Users\beaviv\DIAMOND-slotted_manual_Plots\without_arrivals"
-    base_path = f'/home/beaviv/DIAMOND-slotted_manual_Plots/refinement_steps_{refinement_steps}/with_prediction'  # with_arrivals   # For claster
+    base_path = f'/work_space/project2/SlottedDIAMOND/DIAMOND/runs/refinement_steps_{refinement_steps}/with_prediction'  # with_arrivals   # For claster
     base_path = os.path.join(base_path, f"{graph_mode}", f"{Gloval_env.kwargs['trx_power_mode']}")
     subfolder_name = f"{Gloval_env.num_nodes}_Nodes_{Gloval_env.num_edges // 2}_Edges"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Add timestamp

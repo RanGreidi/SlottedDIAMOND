@@ -30,7 +30,7 @@ class FlowPrediction:
         # General
         self.pkt_arrival_sample_rate = flow_statistics.pkt_arrival_sample_rate
         self.type_scaler = flow_statistics.type_scaler        
-        self.MODEL_PATH = r'/home/beaviv/traffic_mamba/checkpoints/best_model.pth'  # r'C:\Users\beaviv\DIAMOND_Slotted\SlottedDIAMOND\TraficPredictor_MAMBA\checkpoints\best_model.pth', "TraficPredictor_MAMBA/checkpoints/best_model.pth"
+        self.MODEL_PATH = "TraficPredictor_MAMBA/checkpoints/best_model.pth"
         self.True_future_count = flow_statistics.future_count
         self.True_future_evets = flow_statistics.future_events
 
