@@ -69,7 +69,8 @@ class FlowPrediction:
         
         # post process the prediction
         y_pred = np.round(y_pred).numpy()
-
+        y_pred = y_pred[:len(self.True_future_count)]
+        
         self.prediction_MAE = abs(self.True_future_count - y_pred).mean()
         self.prediction_MSE = ((self.True_future_count - y_pred) ** 2).mean()
 
