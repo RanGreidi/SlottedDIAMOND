@@ -533,9 +533,9 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 6  # 60
-    num_edges = 9  # 90
-    num_actions = 4  # 15, 4
+    num_nodes = 40  # 60
+    num_edges = 40  # 90
+    num_actions = 15  # 15, 4
     temperature = 1.2
     num_episodes = 2  # 3
     episode_from = 7500  # 7500  # 7501
@@ -576,7 +576,7 @@ if __name__ == "__main__":
 
     run_competition = True  # True if regular case, False if want to run only our algo
 
-    for GRAPH_MODE in ['random']:  # ['random', 'nsfnet', 'geant']
+    for GRAPH_MODE in ['random_internet']:  # ['random', 'nsfnet', 'geant']
         for trx_power_mode in ['equal']:
 
             print("----------------------------")
@@ -654,7 +654,7 @@ if __name__ == "__main__":
 
                                              ]
 
-            flows = [4,5]  # [40,50,60,70,80,90,100,110,120]
+            flows = [20,30,40]#,60,70,80,90,100,110,120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 
