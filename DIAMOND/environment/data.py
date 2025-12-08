@@ -118,15 +118,19 @@ def generate_env(num_nodes=10,
                  graph_mode='random',
                  slot_duration=None,
                  num_slots=None,
+                 capacity_matrix=None,
                  **kwargs):
     # assert graph_mode.lower() in ['random', 'nsfnet', 'geant']
-    assert graph_mode.lower() in ['random', 'random_internet', 'nsfnet', 'geant', 'grid', 'irregular_grid_8x8', 'irregular_grid_6x6']
+    assert graph_mode.lower() in ['random', 'random_internet', 'nepal', 'nsfnet', 'geant', 'grid', 'irregular_grid_8x8', 'irregular_grid_6x6']
 
     # 1. create graph
     if graph_mode == 'random':
         adjacency, positions = generate_random_graph(n=num_nodes, e=num_edges, seed=seed)
     elif graph_mode == 'random_internet':
         adjacency, positions = generate_random_internet_graph(n_total=num_nodes, n_clusters=3, p_intra=0.4, p_inter=0.02, seed=seed)        
+    elif graph_mode == 'nepal':
+        adjacency, positions, capacity_matrix = create_nepal_graph()   
+        num_nodes = 25   
     elif graph_mode == 'nsfnet':
         adjacency, positions = create_nsfnet_graph()
         num_nodes = 14
@@ -163,15 +167,18 @@ def generate_env(num_nodes=10,
     # 2. create random flows
     delta = 10
     packets = list(range(int(min_flow_demand), int(max_flow_demand) + delta, delta))
-    # demands = [random.choice(packets) for _ in range(num_flows)]
+    random_demands = [random.choice(packets) for _ in range(num_flows)]
     HawkesParams = kwargs.get('HawkesParams')
     pkt_arrival_sample_rate = kwargs.get('pkt_arrival_sample_rate')
-    flows, flows_statistics = _get_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=num_flows, demands=packets, slot_duration=slot_duration, num_slots=num_slots, pkt_arrival_sample_rate=pkt_arrival_sample_rate, HawkesParams=HawkesParams,  seed=seed)
+    flows, flows_statistics = _get_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=num_flows, demands=random_demands, slot_duration=slot_duration, num_slots=num_slots, pkt_arrival_sample_rate=pkt_arrival_sample_rate, HawkesParams=HawkesParams,  seed=seed)
 
     # 3. generate env instance
     # capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=(num_nodes, num_nodes))
     np.random.seed(seed)
-    capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=adjacency.shape)
+    if capacity_matrix is None:
+        capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=adjacency.shape)
+    else:
+        pass # in case capacity matrix is given 
 
     # interference matrix
     interference_matrix = np.ones((num_nodes, num_nodes)) - np.eye(num_nodes)

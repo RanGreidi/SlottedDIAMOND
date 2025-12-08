@@ -565,18 +565,21 @@ if __name__ == "__main__":
         alpha=0.025,  # 0.5 0.4
         beta=0.0001,  # 0.7 0.8
         history_num_slots=200,  # 100
-        allow_Hawkes_arrivals=True,
+        allow_Hawkes_arrivals=True,     # this initiate a random first demand to each flow (not the initial history count)
         elephent_flows_num=10,
         mice_scaler=5,  # 0.1, 50, 150, 20
         elephent_scaler=5,
         ManualAdded_Fixed_InitalPkts=100)  # 0.1, 100, 350, 50
 
     # predictor params
-    predictor_mode = 'predictor_on'  # 'predictor_on' # 'predictor_off', 'Ideal'
-
+    predictor_mode = 'predictor_on' #'predictor_on'  # 'predictor_on' # 'predictor_off', 'Ideal'  # predictor_off - dont allow the predicted arrivals to be added to the algorithm each slot
+    
+    # TO TURN use only emptying flows, AND TO NOT LET NEW PACKET arrive DURING NUP:
+    # set allow_Hawkes_arrivals=False AND predictor_mode = 'predictor_off'
+    
     run_competition = True  # True if regular case, False if want to run only our algo
 
-    for GRAPH_MODE in ['random_internet']:  # ['random', 'nsfnet', 'geant']
+    for GRAPH_MODE in ['nepal']:  # ['random', 'nsfnet', 'geant', 'random_internet', 'nepal']
         for trx_power_mode in ['equal']:
 
             print("----------------------------")
@@ -654,7 +657,7 @@ if __name__ == "__main__":
 
                                              ]
 
-            flows = [20,30,40]#,60,70,80,90,100,110,120]
+            flows = [4,30,40]#,60,70,80,90,100,110,120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 
