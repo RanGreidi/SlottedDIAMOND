@@ -140,9 +140,9 @@ class TestvsCompetitors:
                 # generate first decisions
 
                 # Run Slotted DIAMOND
-                _, self.first_step_actions['SlotedDIAMOND'], all_slotted_paths = self.slotted_diamond(copy.deepcopy(Gloval_env),
-                                                                                   env_configurations, flows_statistics,
-                                                                                   grrl_data=False)  # True
+                _, self.first_step_actions['SlotedDIAMOND'], all_slotted_paths, paths_4_ns3 = self.slotted_diamond(copy.deepcopy(Gloval_env),
+                                                                                                env_configurations, flows_statistics,
+                                                                                                grrl_data=False)  # True
                 if self.run_competition:
                     # Run DIAMOND
                     print(f"Started DIAMOND \n")
@@ -280,14 +280,20 @@ class TestvsCompetitors:
                 save_arguments_to_file(filename=file_path, args=self.HawkesParams)
                 # save all_paths
                 file_path = os.path.join(subfolder_path, "all_slotted_paths.json")
-                save_arguments_to_file(filename=file_path, args=all_slotted_paths)
+                save_arguments_to_file(filename=file_path, args=paths_4_ns3)
                 # save link capacities for NS3
                 file_path = os.path.join(subfolder_path, "link_capacities.json")
-                capacity_list = [int(x) for x in list(Gloval_env.bandwidth_edge_list)]
+                capacity_list = [int(x / 100 ) for x in list(Gloval_env.bandwidth_edge_list)]
                 save_arguments_to_file(filename=file_path, args=capacity_list)
                 # save flows for NS3
                 file_path = os.path.join(subfolder_path, "flows.json")
                 flows_list = Gloval_env.flows
+                new_flow_list = []
+                for flow in flows_list:
+                    new_flow = flow
+                    new_flow['packets'] /= 100
+                    new_flow_list.append(new_flow)
+                save_arguments_to_file(filename=file_path, args=new_flow_list)    
                 save_arguments_to_file(filename=file_path, args=flows_list)
                 # save node positions for NS3
                 file_path = os.path.join(subfolder_path, "node_positions.npy")
@@ -533,8 +539,8 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 40  # 60
-    num_edges = 40  # 90
+    num_nodes = 20  # 60
+    num_edges = 20  # 90
     num_actions = 15  # 15, 4
     temperature = 1.2
     num_episodes = 2  # 3
@@ -579,7 +585,7 @@ if __name__ == "__main__":
     
     run_competition = True  # True if regular case, False if want to run only our algo
 
-    for GRAPH_MODE in ['nepal']:  # ['random', 'nsfnet', 'geant', 'random_internet', 'nepal']
+    for GRAPH_MODE in ['random_internet']:  # ['random', 'nsfnet', 'geant', 'random_internet', 'nepal']
         for trx_power_mode in ['equal']:
 
             print("----------------------------")
@@ -657,7 +663,7 @@ if __name__ == "__main__":
 
                                              ]
 
-            flows = [4,30,40]#,60,70,80,90,100,110,120]
+            flows = [20,40,60,80]#,60,70,80,90,100,110,120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 

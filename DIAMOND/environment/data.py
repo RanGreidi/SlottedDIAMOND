@@ -127,9 +127,10 @@ def generate_env(num_nodes=10,
     if graph_mode == 'random':
         adjacency, positions = generate_random_graph(n=num_nodes, e=num_edges, seed=seed)
     elif graph_mode == 'random_internet':
-        adjacency, positions = generate_random_internet_graph(n_total=num_nodes, n_clusters=3, p_intra=0.4, p_inter=0.02, seed=seed)        
+        adjacency, positions = generate_random_internet_graph(n_total=num_nodes, n_clusters=4, p_intra=0.4, p_inter=0.02, seed=seed)        
     elif graph_mode == 'nepal':
-        adjacency, positions, capacity_matrix = create_nepal_graph()   
+        adjacency, positions, capacity_matrix = create_nepal_graph()  
+        capacity_matrix *= 100 # so that flow demand will be meassured in kilogytes
         num_nodes = 25   
     elif graph_mode == 'nsfnet':
         adjacency, positions = create_nsfnet_graph()

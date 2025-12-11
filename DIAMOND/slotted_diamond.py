@@ -38,6 +38,7 @@ class SLOTTED_DIAMOND:
         full_run_data = []
         Actions = []
         all_slotted_paths = []
+        paths_4_ns3 = []
         self.flows_statistics = flows_statistics
         if self.predictor_mode == 'predictor_on':
             self.flows_predicted_statistics = self.predict_demand(flows_statistics)
@@ -72,7 +73,7 @@ class SLOTTED_DIAMOND:
                 slot_data['SlotedDIAMOND_active_flows'] = [flow['name'] for flow in step_env.flows]
                 slot_data['SlotedDIAMOND_delay'] = SlotedDIAMOND_delay_data['delay_per_flow']
                 slot_data['SlotedDIAMOND_rates'] = SlotedDIAMOND_rates_data['rate_per_flow']
-                
+                paths_4_ns3.append({flow:action for flow,action in zip(slot_data['SlotedDIAMOND_active_flows'],slot_paths)})
                 # Actions is in the form of: {flow_name_1:flow_action_1 , flow_name_2:flow_action_2 ... }
                 # Actions.append( [{flow:action} for flow,action in zip(slot_data['SlotedDIAMOND_active_flows'],slot_action)] )
                 Actions.append( {flow:action for flow,action in zip(slot_data['SlotedDIAMOND_active_flows'],slot_action)} )
@@ -87,7 +88,7 @@ class SLOTTED_DIAMOND:
 
             print(f"Finished slot {slot + 1}/{self.num_slots} In initial Slotted_DIAMOND \n")
 
-        return full_run_data, Actions, all_slotted_paths
+        return full_run_data, Actions, all_slotted_paths, paths_4_ns3
 
     def run_slot(self, env, grrl_data=False):
         # stage 1

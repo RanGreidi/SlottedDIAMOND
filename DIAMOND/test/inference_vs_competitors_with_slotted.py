@@ -6,7 +6,8 @@ import shutil
 import copy
 import sys
 sys.path.insert(0, 'DIAMOND')
-##sys.path.insert(0, '/work_space/project2/DIAMOND-master/DIAMOND-master')
+sys.path.insert(0, '/work_space/project2/SlottedDIAMOND/')
+
 
 from diamond import DIAMOND
 from plots.plot_results import plot_algorithm_metrics
@@ -101,10 +102,11 @@ class TestvsCompetitors:
                                                                             rayleigh_scale=kwargs.get('rayleigh_scale'),
                                                                             max_trx_power=kwargs.get('max_trx_power'),
                                                                             channel_gain=kwargs.get('channel_gain'),
-                                                                            HawkesParams=self.HawkesParams)
+                                                                            HawkesParams=self.HawkesParams,
+                                                                            pkt_arrival_sample_rate=self.pkt_arrival_sample_rate)
             
             # generate first decisions
-
+            # show_graph(Gloval_env.graph)
             # Run Slotted DIAMOND
             _, self.first_step_actions['SlotedDIAMOND'] = self.slotted_diamond(copy.deepcopy(Gloval_env), env_configurations, flows_statistics, grrl_data=True)  
             # Run DIAMOND 
@@ -248,7 +250,7 @@ class TestvsCompetitors:
         # adding flow pkts according to arrivle statistics
         if slot % self.pkt_arrival_sample_rate == 0:
             for flow_statistic in flows_statistics:
-                entered_new_pkts = flow_statistic.step()
+                entered_new_pkts = flow_statistic.step(slot)
                 flow_name = flow_statistic.flow_name
                 for algo in self.algos:
                     flow = get_flow_by_name(Algos_Global_flows[algo],flow_name) 
@@ -351,12 +353,12 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 10  # 60
-    num_edges = 15  # 90
+    num_nodes = 60  # 60
+    num_edges = 90  # 90
     num_actions = 15
     temperature = 1.2
     num_episodes = 1
-    episode_from = 7501
+    episode_from = 7503
     nb3r_steps = 1
 
     trx_power_mode = 'equal'
@@ -372,25 +374,26 @@ if __name__ == "__main__":
     units = 1e6
 
     slot_duration = 1
-    num_slots = 150
+    num_slots = 50
 
-    pkt_arrival_sample_rate = 5
+    pkt_arrival_sample_rate = 10
     
     # Hawkes parms
     HawkesParams = dict(
-    lambda0 = 0.9,
-    alpha = 0.5,
-    beta = 0.7,
-    history_num_slots = 100,
+    lambda0 = 0.005,
+    alpha = 0.025,
+    beta = 0.0001,
+    history_num_slots = 200,
     allow_Hawkes_arrivals = True,
     elephent_flows_num = 10,
-    mice_scaler = 0.1,
-    elephent_scaler = 0.1)
+    mice_scaler = 5,
+    elephent_scaler = 5,
+    ManualAdded_Fixed_InitalPkts=100)
 
     # predictor params    
-    predictor_mode = 'Ideal' # 'predictor_on' # 'predictor_off'
+    predictor_mode = 'predictor_on' # 'predictor_on' # 'predictor_off' # 'Ideal'
     
-    for GRAPH_MODE in ['random']:
+    for GRAPH_MODE in ['random_internet','random']:
         for trx_power_mode in ['equal']:
 
             print("----------------------------")
@@ -400,7 +403,7 @@ if __name__ == "__main__":
             data_rates = []
             data_delay = []
 
-            for num_flows in [300, 400, 500, 600, 700, 800, 900] if GRAPH_MODE == 'random' else \
+            for num_flows in [60, 100, 150, 200, 250, 300, 400] if GRAPH_MODE == 'random' else \
                              [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]:
                 
                 alg = TestvsCompetitors(grrl_model_path=MODEL_PATH, num_episodes=num_episodes, episode_from=episode_from,
