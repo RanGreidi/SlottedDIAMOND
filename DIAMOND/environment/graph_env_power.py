@@ -332,8 +332,9 @@ class GraphEnvPower:
         # capacity
         normalized_capacity = self.edge_list_to_adj_mat(self.current_link_capacity)
         if self.normalize_capacity:
-            normalized_capacity = np.divide(normalized_capacity, self.bandwidth_matrix,
-                                            out=np.zeros_like(normalized_capacity), where=self.bandwidth_matrix != 0)
+            # normalized_capacity = np.divide(normalized_capacity, self.bandwidth_matrix,
+            #                                 out=np.zeros_like(normalized_capacity), where=self.bandwidth_matrix != 0)
+            normalized_capacity /= np.max(normalized_capacity)
         normalized_capacity *= self.adjacency_matrix
         adj_matrix = np.stack([interference,
                                normalized_capacity,

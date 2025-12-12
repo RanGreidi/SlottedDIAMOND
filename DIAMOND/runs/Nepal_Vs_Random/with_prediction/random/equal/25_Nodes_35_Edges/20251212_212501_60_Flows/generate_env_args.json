@@ -1,0 +1,23 @@
+{
+    "args": {
+        "num_nodes": 25,
+        "num_edges": 35,
+        "num_actions": 8,
+        "num_flows": 60,
+        "slot_duration": 1,
+        "num_slots": 50,
+        "pkt_size": 5000,
+        "units": 1000000.0,
+        "pkt_arrival_sample_rate": 10,
+        "min_flow_demand": 5,
+        "max_flow_demand": 200,
+        "min_capacity": 200,
+        "max_capacity": 500,
+        "seed": 7634,
+        "graph_mode": "random",
+        "trx_power_mode": "equal",
+        "rayleigh_scale": 1,
+        "max_trx_power": 10,
+        "channel_gain": 1
+    }
+}

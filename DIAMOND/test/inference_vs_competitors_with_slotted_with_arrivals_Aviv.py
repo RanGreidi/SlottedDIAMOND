@@ -539,11 +539,11 @@ if __name__ == "__main__":
     script_path = os.path.abspath(__file__)
 
     # general params
-    num_nodes = 20  # 60
-    num_edges = 20  # 90
-    num_actions = 15  # 15, 4
+    num_nodes = 25  # 60
+    num_edges = 35  # 90
+    num_actions = 8  # 15, 4
     temperature = 1.2
-    num_episodes = 2  # 3
+    num_episodes = 10  # 3
     episode_from = 7500  # 7500  # 7501
     nb3r_steps = 0 #20  # , 100
     refinement_steps = 10  # number of NB3R steps in slotted_diamond
@@ -557,7 +557,7 @@ if __name__ == "__main__":
     min_flow_demand = 5   # 5, 500
     max_flow_demand = 200  # 200, 2000
 
-    pkt_size = 500  # 500, 100
+    pkt_size = 5000  # 500, 100
     units = 1e6
 
     slot_duration = 1
@@ -572,20 +572,20 @@ if __name__ == "__main__":
         beta=0.0001,  # 0.7 0.8
         history_num_slots=200,  # 100
         allow_Hawkes_arrivals=True,     # this initiate a random first demand to each flow (not the initial history count)
-        elephent_flows_num=10,
-        mice_scaler=5,  # 0.1, 50, 150, 20
-        elephent_scaler=5,
+        elephent_flows_num=3,
+        mice_scaler=0.5,  # 0.1, 50, 150, 20
+        elephent_scaler=30,
         ManualAdded_Fixed_InitalPkts=100)  # 0.1, 100, 350, 50
 
     # predictor params
-    predictor_mode = 'predictor_on' #'predictor_on'  # 'predictor_on' # 'predictor_off', 'Ideal'  # predictor_off - dont allow the predicted arrivals to be added to the algorithm each slot
+    predictor_mode = 'predictor_off' #'predictor_on'  # 'predictor_on' # 'predictor_off', 'Ideal'  # predictor_off - dont allow the predicted arrivals to be added to the algorithm each slot
     
     # TO TURN use only emptying flows, AND TO NOT LET NEW PACKET arrive DURING NUP:
     # set allow_Hawkes_arrivals=False AND predictor_mode = 'predictor_off'
     
     run_competition = True  # True if regular case, False if want to run only our algo
 
-    for GRAPH_MODE in ['random_internet']:  # ['random', 'nsfnet', 'geant', 'random_internet', 'nepal']
+    for GRAPH_MODE in ['nepal','random']:  # ['random', 'nsfnet', 'geant', 'random_internet', 'nepal']
         for trx_power_mode in ['equal']:
 
             print("----------------------------")
@@ -663,7 +663,7 @@ if __name__ == "__main__":
 
                                              ]
 
-            flows = [20,40,60,80]#,60,70,80,90,100,110,120]
+            flows = [20,40,60]#,60,70,80,90,100,110,120]
 
             for num_flows_idx, num_flows in enumerate(flows):
 

@@ -12,5 +12,4 @@ results/*
 result/*
 result
 *.png
-runs/
 .vscode/

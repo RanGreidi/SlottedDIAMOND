@@ -1,0 +1,13 @@
+{
+    "args": {
+        "lambda0": 0.005,
+        "alpha": 0.025,
+        "beta": 0.0001,
+        "history_num_slots": 200,
+        "allow_Hawkes_arrivals": true,
+        "elephent_flows_num": 10,
+        "mice_scaler": 5,
+        "elephent_scaler": 5,
+        "ManualAdded_Fixed_InitalPkts": 100
+    }
+}

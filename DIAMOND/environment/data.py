@@ -131,6 +131,7 @@ def generate_env(num_nodes=10,
     elif graph_mode == 'nepal':
         adjacency, positions, capacity_matrix = create_nepal_graph()  
         capacity_matrix *= 100 # so that flow demand will be meassured in kilogytes
+        capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=adjacency.shape)
         num_nodes = 25   
     elif graph_mode == 'nsfnet':
         adjacency, positions = create_nsfnet_graph()
