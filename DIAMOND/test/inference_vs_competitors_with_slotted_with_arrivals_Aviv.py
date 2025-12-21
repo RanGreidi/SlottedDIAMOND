@@ -211,6 +211,7 @@ class TestvsCompetitors:
                                                       direction=env_configurations['direction'],
                                                       reward_balance=env_configurations['reward_balance'],
                                                       algo=algo,
+                                                      path_bank=env_configurations['path_bank'],
                                                       seed=env_configurations['seed'],
                                                       **kwargs)
 
@@ -541,12 +542,12 @@ if __name__ == "__main__":
     # general params
     num_nodes = 25  # 60
     num_edges = 35  # 90
-    num_actions = 8  # 15, 4
+    num_actions = 10  # 15, 4
     temperature = 1.2
     num_episodes = 10  # 3
     episode_from = 7500  # 7500  # 7501
     nb3r_steps = 0 #20  # , 100
-    refinement_steps = 10  # number of NB3R steps in slotted_diamond
+    refinement_steps = 84*2  # number of NB3R steps in slotted_diamond
 
     trx_power_mode = 'equal'
     rayleigh_scale = 1

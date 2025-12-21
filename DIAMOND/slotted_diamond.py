@@ -62,6 +62,7 @@ class SLOTTED_DIAMOND:
                                             k=env_configurations['k'],
                                             direction=env_configurations['direction'],
                                             reward_balance=env_configurations['reward_balance'],
+                                            path_bank=Gloval_env.path_bank,
                                             seed=env_configurations['seed']) 
 
             # Run SLotted DIAMOND

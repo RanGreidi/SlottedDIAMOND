@@ -4,7 +4,7 @@ from DIAMOND.environment.graph_env_power import GraphEnvPower as GraphEnv
 from DIAMOND.environment.utils import *
 from DIAMOND.environment.Traffic_Probability_Model import Traffic_Probability_Model
 from DIAMOND.environment.Traffic_Probability_HawkesModel import HawkesModel
-
+from DIAMOND.environment.nepal_flows import nepal_flows
 
 def _get_random_flows_no_arrivals(num_nodes, num_flows, demands=[100], seed=1):
     """
@@ -99,6 +99,59 @@ def _get_random_flows_with_arrivals(num_nodes, num_flows, demands, slot_duration
 
     return flows, flows_statistics
 
+def _get_Nepal_random_flows_with_arrivals(num_nodes, num_flows, orig_flows, slot_duration, num_slots, pkt_arrival_sample_rate, HawkesParams, seed=1):
+    """
+    generates random flows
+    :param num_nodes: number of nodes in the communication graph
+    :param num_flows: number of flows in the communication graph
+    :param demands: list of packets demands for flows to choose from
+    :param seed: random seed
+    :return: list of flows as (src, dst, pkt)
+    """
+    orig_flows = [{k: v for k, v in d.items() if k != 'port'} for d in orig_flows]
+    orig_flows = [{k: v for k, v in d.items() if k != 'start'} for d in orig_flows]
+    orig_flows = [{k: v for k, v in d.items() if k != 'stop'} for d in orig_flows]
+    orig_flows = [{k: v for k, v in d.items() if k != 'max_bytes'} for d in orig_flows]
+    orig_flows = [{('packets' if k == 'send_size' else k): v for k, v in d.items()} for d in orig_flows]
+    orig_flows = [{**d, 'name': i} for i, d in enumerate(orig_flows)]
+    random.seed(seed)
+
+    flows = []
+    flows_statistics = []
+
+    types = ['elephent', 'mice']
+    for flow in orig_flows:
+        src, dst = flow['src'], flow['dst']
+
+        flow_statistics = HawkesModel(  # alpha * exp(-beta*t)
+                                        lambda0=HawkesParams['lambda0'],
+                                        alpha=HawkesParams['alpha'],
+                                        beta=HawkesParams['beta'],
+
+                                        source=src,
+                                        destination=dst,
+                                        flow_name=flow['name'],
+                                        num_slots=num_slots,
+                                        slot_duration=slot_duration,
+                                        history_num_slots=HawkesParams['history_num_slots'],
+                                        pkt_arrival_sample_rate=pkt_arrival_sample_rate,
+
+                                        type='elephent' if flow['name'] < HawkesParams['elephent_flows_num'] else 'mice',  #  type='elephent' if name < HawkesParams['elephent_flows_num'] else 'mice, random.choice(types)
+                                        mice_scaler=HawkesParams['mice_scaler'],
+                                        elephent_scaler=HawkesParams['elephent_scaler'],
+
+                                        ManualAdded_Fixed_InitalPkts=HawkesParams['ManualAdded_Fixed_InitalPkts'],
+                                        seed=seed)
+
+        f = {"source": src,
+             "destination": dst,
+             "packets":  flow['packets'] * 0.1, # flow_statistics.initial_count if HawkesParams['allow_Hawkes_arrivals'] else flow_demand[name] ,random.choice(demands)
+             "name": flow['name']}  # to be changes in the future to markov.state
+
+        flows.append(f)
+        flows_statistics.append(flow_statistics)
+
+    return flows, flows_statistics
 
 def generate_env(num_nodes=10,
                  num_edges=20,
@@ -129,9 +182,11 @@ def generate_env(num_nodes=10,
     elif graph_mode == 'random_internet':
         adjacency, positions = generate_random_internet_graph(n_total=num_nodes, n_clusters=4, p_intra=0.4, p_inter=0.02, seed=seed)        
     elif graph_mode == 'nepal':
-        adjacency, positions, capacity_matrix = create_nepal_graph()  
+        np.set_printoptions(threshold=np.inf, linewidth=2000, edgeitems=25)
+        adjacency, positions, capacity_matrix = create_nepal_graph()
+        # adjacency, positions = generate_random_graph(n=num_nodes, e=num_edges, seed=seed)  
         capacity_matrix *= 100 # so that flow demand will be meassured in kilogytes
-        capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=adjacency.shape)
+        # capacity_matrix = np.random.randint(low=300, high=899 + 1, size=adjacency.shape)
         num_nodes = 25   
     elif graph_mode == 'nsfnet':
         adjacency, positions = create_nsfnet_graph()
@@ -179,8 +234,10 @@ def generate_env(num_nodes=10,
     np.random.seed(seed)
     if capacity_matrix is None:
         capacity_matrix = np.random.randint(low=min_capacity, high=max_capacity + 1, size=adjacency.shape)
-    else:
-        pass # in case capacity matrix is given 
+    else: # nepal mode
+        nepal_flows_orig = nepal_flows
+        flows, flows_statistics = _get_Nepal_random_flows_with_arrivals(num_nodes=num_nodes, num_flows=len(nepal_flows_orig), orig_flows=nepal_flows_orig, slot_duration=slot_duration, num_slots=num_slots, pkt_arrival_sample_rate=pkt_arrival_sample_rate, HawkesParams=HawkesParams,  seed=seed)
+        pass 
 
     # interference matrix
     interference_matrix = np.ones((num_nodes, num_nodes)) - np.eye(num_nodes)
@@ -205,6 +262,7 @@ def generate_env(num_nodes=10,
                                 direction=direction,
                                 reward_balance=reward_balance,
                                 seed=seed,
+                                path_bank=env.path_bank,
                                 **kwargs)
 
     return env, env_configurations, flows_statistics

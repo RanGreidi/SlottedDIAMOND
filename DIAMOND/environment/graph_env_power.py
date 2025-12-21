@@ -41,6 +41,7 @@ class GraphEnvPower:
                  direction="minimize",
                  normalize_capacity=True,
                  received_interference_map=None,
+                 path_bank=None,
                  **kwargs):
         super(GraphEnvPower, self).__init__()
 
@@ -83,7 +84,7 @@ class GraphEnvPower:
         self.node_feature_size = 2
         self.edge_feature_size = 3
 
-        self.path_bank = dict()
+        self.path_bank = dict() if path_bank == None else path_bank
 
         # graph data
         self.interference_map = None
